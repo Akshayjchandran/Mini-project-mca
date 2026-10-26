@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block title %}Completed Reports | ITR Learn &amp; Simulate{% endblock %}
+
+{% block content %}
+
+<div class="page-container">
+
+    <!-- PAGE HEADER -->
+    <div class="page-header">
+        <div>
+            <h1>📑 Completed Simulation Reports</h1>
+            <p>Review filed academic practice returns and download PDF verification summaries.</p>
+        </div>
+        <div class="header-actions">
+            <a href="{{ url_for('simulation') }}" class="btn btn-secondary">
+                ← All Simulations
+            </a>
+            <a href="{{ url_for('simulation') }}" class="btn btn-primary">
+                ➕ New Simulation
+            </a>
+        </div>
+    </div>
+
+    {% if reports %}
+    <div class="table-responsive">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Report / Simulation Title</th>
+                    <th>Financial Year</th>
+                    <th>Status</th>
+                    <th>Filing / Completion Date</th>
+                    <th style="text-align: right;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for rep in reports %}
+                <tr>
+                    <td>
+                        <strong>{{ rep.title }}</strong>
+                        <div class="text-muted text-xs">Ack Ref: ITR-SIM-{{ rep.id }}-{{ rep.created_at[:10].replace('-', '') }}</div>
+                    </td>
+                    <td>
+                        <span class="badge badge-info">{{ rep.financial_year }}</span>
+                    </td>
+                    <td>
+                        <span class="badge badge-success">✅ Filed (Simulation)</span>
+                    </td>
+                    <td>
+                        <span class="text-sm text-muted">{{ rep.updated_at[:16].replace('T', ' ') }}</span>
+                    </td>
+                    <td style="text-align: right;">
+                        <div class="action-btn-group">
+                            <a href="{{ url_for('report_view', sim_id=rep.id) }}" class="btn btn-sm btn-primary">
+                                👁️ View Report
+                            </a>
+                            <a href="{{ url_for('report_download', sim_id=rep.id) }}" class="btn btn-sm btn-secondary">
+                                📥 Download PDF
+                            </a>
+                            <form method="POST" action="{{ url_for('simulation_delete', sim_id=rep.id) }}" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this completed report?');">
+                                <button type="submit" class="btn btn-sm btn-danger-outline" title="Delete Report">
+                                    🗑️
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state-card">
+        <div class="empty-state-icon">📑</div>
+        <h3>No completed reports yet</h3>
+        <p>Complete all 13 steps of an ITR filing simulation to calculate final tax and generate an academic practice report.</p>
+        <a href="{{ url_for('simulation') }}" class="btn btn-primary">
+            🚀 Go to Simulations
+        </a>
+    </div>
+    {% endif %}
+
+</div>
+
+{% endblock %}

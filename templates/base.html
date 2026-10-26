@@ -1,0 +1,169 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}ITR Learn &amp; Simulate{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body>
+
+    <!-- TOP BAR -->
+    <div class="top-bar">
+        <div class="container top-bar-content">
+            <span>Educational ITR Practice &amp; Simulation Platform</span>
+            <div class="top-links">
+                <a href="#main-content">Skip to Main Content</a>
+                <span>|</span>
+                <span class="top-notice">⚠️ Not the official Income Tax portal</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN HEADER -->
+    <header class="main-header">
+        <div class="container header-content">
+
+            <!-- BRAND -->
+            <a href="{{ url_for('home') }}" class="brand" style="text-decoration:none;">
+                <div class="brand-mark">ITR</div>
+                <div class="brand-text">
+                    <h1>ITR Learn &amp; Simulate</h1>
+                    <p>AI-Integrated Income Tax Return Training &amp; Simulation</p>
+                </div>
+            </a>
+
+            <!-- HEADER ACTIONS -->
+            <div class="header-actions" style="display:flex;gap:10px;align-items:center;">
+                {% if session.get("user_id") %}
+                    <a href="{{ url_for('dashboard') }}" class="register-button">Dashboard</a>
+                    <a href="{{ url_for('profile') }}" class="register-button">My Profile</a>
+                    <a href="{{ url_for('logout') }}" class="login-button">Logout</a>
+                {% else %}
+                    <a href="{{ url_for('register') }}" class="register-button">Register</a>
+                    <a href="{{ url_for('login') }}" class="login-button">Login</a>
+                {% endif %}
+            </div>
+
+        </div>
+    </header>
+
+    <!-- NAVIGATION -->
+    <nav class="main-nav" aria-label="Main Navigation">
+        <div class="container nav-container">
+
+            <button class="mobile-nav-toggle" id="mobileNavToggle" aria-label="Toggle Navigation">&#9776;</button>
+
+            <div class="nav-links" id="navLinks">
+                <a href="{{ url_for('home') }}"
+                   class="nav-item {% if request.endpoint == 'home' %}active{% endif %}">
+                    Home
+                </a>
+                <a href="{{ url_for('training') }}"
+                   class="nav-item {% if request.endpoint in ('training', 'training_lesson') %}active{% endif %}">
+                    Learn ITR
+                </a>
+                <a href="{{ url_for('simulation') }}"
+                   class="nav-item {% if 'simulation' in (request.endpoint or '') %}active{% endif %}">
+                    ITR Simulation
+                </a>
+                <a href="{{ url_for('tax_calculator') }}"
+                   class="nav-item {% if request.endpoint == 'tax_calculator' %}active{% endif %}">
+                    Tax Calculator
+                </a>
+                <a href="{{ url_for('ai_assistant') }}"
+                   class="nav-item {% if request.endpoint == 'ai_assistant' %}active{% endif %}">
+                    AI Assistant
+                </a>
+                {% if session.get("user_id") %}
+                <a href="{{ url_for('dashboard') }}"
+                   class="nav-item {% if request.endpoint == 'dashboard' %}active{% endif %}">
+                    Dashboard
+                </a>
+                {% endif %}
+            </div>
+
+        </div>
+    </nav>
+
+    <!-- FLASH MESSAGES -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-container container">
+                {% for category, message in messages %}
+                    <div class="flash flash-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <!-- PAGE CONTENT -->
+    <main id="main-content">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- DISCLAIMER BANNER -->
+    <section class="disclaimer">
+        <div class="container">
+            <strong>⚠️ Educational Simulation Only:</strong>
+            This application is an educational ITR training and simulation platform.
+            It is <strong>NOT</strong> the official Income Tax Department portal and does <strong>NOT</strong> submit
+            income-tax returns to the Government of India. Always verify tax information against official sources.
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer>
+        <div class="container footer-grid">
+
+            <div>
+                <h3>ITR Learn &amp; Simulate</h3>
+                <p>AI-Integrated Income Tax Return training and simulation platform. </p>
+                <p class="footer-edu-tag"> Educational Project
+                     — Not Official</p>
+            </div>
+
+            <div>
+                <h4>Quick Links</h4>
+                {% if session.get("user_id") %}
+                    <a href="{{ url_for('dashboard') }}">Dashboard</a>
+                    <a href="{{ url_for('training') }}">Training</a>
+                    <a href="{{ url_for('tax_calculator') }}">Tax Calculator</a>
+                    <a href="{{ url_for('tax_slabs') }}">Tax Slabs</a>
+                    <a href="{{ url_for('simulation') }}">ITR Simulation</a>
+                    <a href="{{ url_for('ai_assistant') }}">AI Assistant</a>
+                {% else %}
+                    <a href="{{ url_for('login') }}">Login</a>
+                    <a href="{{ url_for('register') }}">Register</a>
+                {% endif %}
+            </div>
+
+            <div>
+                <h4></h4>
+                <a href="{{ url_for('simulation') }}"></a>
+                <a href="{{ url_for('tax_calculator') }}"></a>
+                <a href="{{ url_for('ai_assistant') }}"></a>
+                <h4 style="margin-top:16px;">Support &amp; Learning</h4>
+                <a href="{{ url_for('training') }}">Curriculum &amp; Help</a>
+                <a href="{{ url_for('tax_slabs') }}">Tax Slabs &amp; FAQs</a>
+            </div>
+
+        </div>
+
+        <div class="footer-bottom">
+            &copy; 2026 ITR Learn &amp; Simulate |
+             &mdash; Educational Use Only
+        </div>
+    </footer>
+
+    <!-- JAVASCRIPT -->
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    {% block scripts %}{% endblock %}
+
+</body>
+</html>

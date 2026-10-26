@@ -1,0 +1,295 @@
+{% extends "base.html" %}
+
+{% block title %}ITR Filing Simulation | ITR Learn &amp; Simulate{% endblock %}
+
+{% block content %}
+
+<div class="page-container sim-hub-page">
+
+    <!-- HERO / HEADER -->
+    <div class="sim-hub-header">
+        <div class="sim-hub-header-left">
+            <span class="sim-hub-badge">
+                <span class="pulse-dot"></span> Academic Simulation Hub &bull; AY 2026-27
+            </span>
+            <h1 class="sim-hub-title">ITR Filing Simulation</h1>
+            <p class="sim-hub-subtitle">
+                Practice filing realistic income tax returns with Form 16 &amp; Form 26AS data, Decision Tree logic, and instant practice report generation.
+            </p>
+        </div>
+        <div class="sim-hub-header-actions">
+            <a href="{{ url_for('drafts') }}" class="btn btn-secondary btn-header-action">
+                📂 Saved Drafts
+            </a>
+            <a href="{{ url_for('reports') }}" class="btn btn-secondary btn-header-action">
+                📑 Completed Reports
+            </a>
+            <button type="button" class="btn btn-primary btn-header-action" onclick="document.getElementById('newSimModal').style.display='flex'">
+                ➕ New Simulation
+            </button>
+        </div>
+    </div>
+
+    <!-- QUICK STATS -->
+    <div class="sim-stats-grid">
+        <div class="sim-stat-card">
+            <div class="sim-stat-icon icon-blue">📋</div>
+            <div class="sim-stat-info">
+                <span class="sim-stat-label">Total Simulations</span>
+                <strong class="sim-stat-value">{{ simulations|length }}</strong>
+            </div>
+        </div>
+        <div class="sim-stat-card">
+            <div class="sim-stat-icon icon-amber">✏️</div>
+            <div class="sim-stat-info">
+                <span class="sim-stat-label">In-Progress Drafts</span>
+                <strong class="sim-stat-value">{{ simulations|selectattr('status','equalto','draft')|list|length }}</strong>
+            </div>
+        </div>
+        <div class="sim-stat-card">
+            <div class="sim-stat-icon icon-green">✅</div>
+            <div class="sim-stat-info">
+                <span class="sim-stat-label">Completed Returns</span>
+                <strong class="sim-stat-value">{{ simulations|selectattr('status','equalto','completed')|list|length }}</strong>
+            </div>
+        </div>
+        <div class="sim-stat-card">
+            <div class="sim-stat-icon icon-indigo">⚖️</div>
+            <div class="sim-stat-info">
+                <span class="sim-stat-label">Assessment Year</span>
+                <strong class="sim-stat-value" style="font-size:15px;line-height:1.3">AY 2026-27 / FY 2025-26</strong>
+            </div>
+        </div>
+    </div>
+
+    <!-- CLEAN 4-PHASE ROADMAP -->
+    <div class="sim-roadmap-card">
+        <div class="sim-roadmap-header">
+            <div>
+                <h2 class="sim-roadmap-title">Filing Workflow &amp; Milestones</h2>
+                <p class="sim-roadmap-subtitle">13 steps organized into 4 intuitive phases with automated validation at each gate.</p>
+            </div>
+            <button type="button" class="btn-toggle-steps" id="toggleStepsBtn" onclick="toggleDetailedSteps()">
+                <span id="toggleLabel">View All 13 Sub-Steps</span> <span id="toggleArrow">&#8595;</span>
+            </button>
+        </div>
+
+        <div class="roadmap-phases-grid">
+            <div class="phase-card">
+                <div class="phase-card-top">
+                    <span class="phase-pill pill-blue">Phase 1 &bull; Steps 1–3</span>
+                    <span class="phase-icon">👤</span>
+                </div>
+                <h3 class="phase-title">Profile &amp; Form Determination</h3>
+                <p class="phase-desc">AY selection, filing mode u/s 139, PAN demographics, Section 6 residency test, and Rule 12 ITR Selection Wizard.</p>
+                <div class="phase-tags">
+                    <span class="phase-tag">Filing Setup</span>
+                    <span class="phase-tag">Section 6 Test</span>
+                    <span class="phase-tag">ITR Wizard</span>
+                </div>
+            </div>
+            <div class="phase-card">
+                <div class="phase-card-top">
+                    <span class="phase-pill pill-indigo">Phase 2 &bull; Steps 4–7</span>
+                    <span class="phase-icon">💼</span>
+                </div>
+                <h3 class="phase-title">Income Schedules</h3>
+                <p class="phase-desc">Schedule selection, Salary Form 16 abstraction, House Property loan interest u/s 24(b), Other Sources, and Capital Gains.</p>
+                <div class="phase-tags">
+                    <span class="phase-tag">Schedule S</span>
+                    <span class="phase-tag">Schedule HP</span>
+                    <span class="phase-tag">Schedule OS / CG</span>
+                </div>
+            </div>
+            <div class="phase-card">
+                <div class="phase-card-top">
+                    <span class="phase-pill pill-amber">Phase 3 &bull; Steps 8–10</span>
+                    <span class="phase-icon">⚖️</span>
+                </div>
+                <h3 class="phase-title">Deductions &amp; Tax Liability</h3>
+                <p class="phase-desc">Chapter VI-A (80C, 80D, 80CCD), TDS/Advance Tax credits, and live Section 115BAC New vs Old Regime comparison.</p>
+                <div class="phase-tags">
+                    <span class="phase-tag">Chapter VI-A</span>
+                    <span class="phase-tag">Taxes Paid</span>
+                    <span class="phase-tag">115BAC Comparison</span>
+                </div>
+            </div>
+            <div class="phase-card">
+                <div class="phase-card-top">
+                    <span class="phase-pill pill-green">Phase 4 &bull; Steps 11–13</span>
+                    <span class="phase-icon">📑</span>
+                </div>
+                <h3 class="phase-title">Validation &amp; CPC Processing</h3>
+                <p class="phase-desc">Rule 12 error audit, draft return preview, simulated E-Verification, and CPC Intimation u/s 143(1) with final report.</p>
+                <div class="phase-tags">
+                    <span class="phase-tag">Pre-Filing Audit</span>
+                    <span class="phase-tag">E-Verification</span>
+                    <span class="phase-tag">CPC Intimation</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- COLLAPSIBLE DETAILED 13-STEP VIEW -->
+        <div id="detailedStepsCollapse" style="display:none; margin-top:22px; padding-top:20px; border-top:1px solid var(--border);">
+            <div class="detailed-steps-grid">
+                {% for s in steps %}
+                <div class="detailed-step-item">
+                    <div class="detailed-step-num">{{ s.step }}</div>
+                    <div class="detailed-step-content">
+                        <span class="detailed-step-icon">{{ s.icon }}</span>
+                        <strong class="detailed-step-title">{{ s.title }}</strong>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- SIMULATIONS TABLE -->
+    <div class="sim-table-card">
+        <div class="sim-table-header">
+            <div>
+                <h2 class="sim-table-title">Your Practice Simulations</h2>
+                <p class="sim-table-subtitle">Resume active drafts or review completed returns and academic reports.</p>
+            </div>
+            {% if simulations %}
+            <button type="button" class="btn btn-sm btn-primary" onclick="document.getElementById('newSimModal').style.display='flex'">
+                ➕ New Simulation
+            </button>
+            {% endif %}
+        </div>
+
+        {% if simulations %}
+        <div class="table-responsive">
+            <table class="saas-data-table">
+                <thead>
+                    <tr>
+                        <th>Simulation Title</th>
+                        <th>Financial Year</th>
+                        <th>Status</th>
+                        <th>Progress</th>
+                        <th>Last Modified</th>
+                        <th style="text-align:right;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for sim in simulations %}
+                    <tr>
+                        <td>
+                            <div class="sim-row-title">
+                                <strong>{{ sim.title }}</strong>
+                                <span class="sim-row-meta">ID #{{ sim.id }} &bull; Created {{ sim.created_at[:10] }}</span>
+                            </div>
+                        </td>
+                        <td><span class="badge-pill badge-neutral">{{ sim.financial_year }}</span></td>
+                        <td>
+                            {% if sim.status == 'completed' %}
+                                <span class="badge-pill badge-completed"><span class="badge-dot dot-green"></span> Completed</span>
+                            {% else %}
+                                <span class="badge-pill badge-draft"><span class="badge-dot dot-amber"></span> Draft &bull; Step {{ sim.current_step }}/13</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="sim-progress-cell">
+                                <div class="progress-bar-wrap">
+                                    <div class="progress-bar" style="width:{{ ((sim.current_step / 13) * 100)|round }}%;"></div>
+                                </div>
+                                <span class="sim-progress-label">Step {{ sim.current_step }}/13 ({{ ((sim.current_step / 13) * 100)|round }}%)</span>
+                            </div>
+                        </td>
+                        <td><span class="text-sm text-muted">{{ sim.updated_at[:16].replace('T',' ') }}</span></td>
+                        <td style="text-align:right;">
+                            <div class="action-btn-group">
+                                {% if sim.status == 'completed' %}
+                                    <a href="{{ url_for('report_view', sim_id=sim.id) }}" class="btn btn-sm btn-outline-action">👁️ View Report</a>
+                                    <a href="{{ url_for('report_download', sim_id=sim.id) }}" class="btn btn-sm btn-outline-action">📥 PDF</a>
+                                {% else %}
+                                    <a href="{{ url_for('simulation_step', sim_id=sim.id, step=sim.current_step) }}" class="btn btn-sm btn-primary-action">▶️ Resume Step {{ sim.current_step }}</a>
+                                {% endif %}
+                                <form method="POST" action="{{ url_for('simulation_delete', sim_id=sim.id) }}" style="display:inline;" onsubmit="return confirm('Delete this simulation permanently?');">
+                                    <button type="submit" class="btn btn-sm btn-danger-action" title="Delete">🗑️</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state-modern">
+            <div class="empty-icon-wrap">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                    <line x1="16" x2="8" y1="13" y2="13"></line>
+                    <line x1="16" x2="8" y1="17" y2="17"></line>
+                </svg>
+            </div>
+            <h3 class="empty-title">No simulations started yet</h3>
+            <p class="empty-desc">
+                Launch your first simulation to walk through salary abstraction, deductions, tax regime comparison, and generate an academic practice return report.
+            </p>
+            <button type="button" class="btn btn-primary btn-lg" onclick="document.getElementById('newSimModal').style.display='flex'">
+                🚀 Launch First Simulation
+            </button>
+        </div>
+        {% endif %}
+    </div>
+
+</div>
+
+<!-- NEW SIMULATION MODAL -->
+<div id="newSimModal" class="modal-backdrop-modern" style="display:none;" onclick="if(event.target===this)this.style.display='none'">
+    <div class="modal-dialog-modern">
+        <div class="modal-header-modern">
+            <div>
+                <h3 class="modal-title-modern">Start New ITR Simulation</h3>
+                <p class="modal-subtitle-modern">Set up your practice case and choose the assessment year.</p>
+            </div>
+            <button type="button" class="modal-close-modern" onclick="document.getElementById('newSimModal').style.display='none'">&times;</button>
+        </div>
+        <form method="POST" action="{{ url_for('simulation_new') }}">
+            <div class="modal-body-modern">
+                <div class="form-group">
+                    <label for="simTitle">Simulation Title <span class="required">*</span></label>
+                    <input type="text" id="simTitle" name="title" class="form-control"
+                           placeholder="e.g., Salaried Individual ITR-1 Practice" required
+                           value="ITR Simulation — Case Study">
+                    <small class="form-hint">A descriptive label makes it easy to find later in your drafts.</small>
+                </div>
+                <div class="form-group" style="margin-top:18px;">
+                    <label for="simFY">Financial Year <span class="required">*</span></label>
+                    <select id="simFY" name="financial_year" class="form-control" required>
+                        <option value="FY2025-26" selected>FY 2025-26 / AY 2026-27 (₹75,000 Standard Deduction)</option>
+                        <option value="FY2026-27">FY 2026-27 / AY 2027-28 (Projected / Future Filing)</option>
+                    </select>
+                    <small class="form-hint">Calculations strictly follow Finance Act rules for the selected year.</small>
+                </div>
+            </div>
+            <div class="modal-footer-modern">
+                <button type="button" class="btn btn-secondary" onclick="document.getElementById('newSimModal').style.display='none'">Cancel</button>
+                <button type="submit" class="btn btn-primary">🚀 Launch Step 1</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function toggleDetailedSteps(){
+    var c=document.getElementById('detailedStepsCollapse');
+    var l=document.getElementById('toggleLabel');
+    var a=document.getElementById('toggleArrow');
+    if(c.style.display==='none'||!c.style.display){
+        c.style.display='block';
+        l.innerText='Hide 13 Sub-Steps';
+        a.innerHTML='&#8593;';
+    }else{
+        c.style.display='none';
+        l.innerText='View All 13 Sub-Steps';
+        a.innerHTML='&#8595;';
+    }
+}
+</script>
+
+{% endblock %}

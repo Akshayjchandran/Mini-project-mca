@@ -1,0 +1,335 @@
+{% extends "base.html" %}
+
+{% block title %}Tax Slabs | ITR Learn &amp; Simulate{% endblock %}
+
+{% block content %}
+
+<div class="page-container">
+
+    <!-- HEADER -->
+
+    <div class="page-header">
+        <div>
+            <h1>📊 Tax Slabs &amp; Rules</h1>
+            <p>Reference guide for tax slabs, regimes, deductions, and ITR forms.</p>
+        </div>
+
+        <!-- FY Selector -->
+        <form method="GET" style="display:flex; align-items:center; gap:8px;">
+            <label for="fySelect" style="font-weight:600;">Financial Year:</label>
+            <select id="fySelect" name="fy" class="form-control" style="width:auto;"
+                    onchange="this.form.submit()">
+                {% for yr in available_years %}
+                <option value="{{ yr }}" {% if yr == selected_year %}selected{% endif %}>
+                    {{ yr.replace("FY", "FY ") }}
+                </option>
+                {% endfor %}
+            </select>
+        </form>
+    </div>
+
+
+    <!-- SECTION TABS -->
+
+    <div class="slab-tabs">
+        <button class="slab-tab active" data-section="slabs">Tax Slabs</button>
+        <button class="slab-tab" data-section="deductions">Deductions</button>
+        <button class="slab-tab" data-section="forms">ITR Forms</button>
+        <button class="slab-tab" data-section="regime">Regime Comparison</button>
+    </div>
+
+
+    <!-- =============================================
+         TAX SLABS SECTION
+    ============================================= -->
+
+    <div class="slab-section" id="section-slabs">
+
+        <div class="info-box">
+            <strong>📅 {{ slab_data.financial_year }}</strong> |
+            Assessment Year: {{ slab_data.assessment_year }} |
+            Governed by: {{ slab_data.law }}
+        </div>
+
+        <div class="slab-grid">
+
+            <!-- NEW REGIME -->
+
+            {% if slab_data.new_regime %}
+            <div class="slab-card">
+                <div class="slab-card-header slab-new">
+                    <h3>🟢 New Tax Regime</h3>
+                    <span class="regime-tag">Default Regime</span>
+                </div>
+                <div class="slab-card-body">
+
+                    <p class="slab-note">Standard Deduction: <strong>₹{{ "{:,.0f}".format(slab_data.new_regime.standard_deduction) }}</strong> on salary/pension.</p>
+
+                    <table class="slab-table">
+                        <thead>
+                            <tr>
+                                <th>Income Range</th>
+                                <th>Tax Rate</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for slab in slab_data.new_regime.slabs %}
+                            <tr>
+                                <td>
+                                    {% if slab.from == 0 %}
+                                        Up to ₹{{ "{:,.0f}".format(slab.to) }}
+                                    {% elif slab.to is none %}
+                                        Above ₹{{ "{:,.0f}".format(slab.from) }}
+                                    {% else %}
+                                        ₹{{ "{:,.0f}".format(slab.from) }} – ₹{{ "{:,.0f}".format(slab.to) }}
+                                    {% endif %}
+                                </td>
+                                <td class="slab-rate {% if slab.rate == 0 %}rate-nil{% elif slab.rate >= 0.25 %}rate-high{% endif %}">
+                                    {{ (slab.rate * 100) | int }}%
+                                </td>
+                            </tr>
+                            {% endfor %}
+                            <tr class="slab-footer-row">
+                                <td>+ Health &amp; Education Cess</td>
+                                <td>4% on tax</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    {% if slab_data.new_regime.rebate_87a %}
+                    <div class="rebate-box rebate-green">
+                        <strong>Section 87A Rebate:</strong>
+                        Up to ₹{{ "{:,.0f}".format(slab_data.new_regime.rebate_87a.maximum) }} rebate
+                        if total income ≤ ₹{{ "{:,.0f}".format(slab_data.new_regime.rebate_87a.income_limit) }}.
+                        <em>(Resident individuals only)</em>
+                    </div>
+                    {% endif %}
+
+                </div>
+            </div>
+            {% endif %}
+
+
+            <!-- OLD REGIME -->
+
+            {% if slab_data.old_regime and slab_data.old_regime.general %}
+            <div class="slab-card">
+                <div class="slab-card-header slab-old">
+                    <h3>🔵 Old Tax Regime</h3>
+                    <span class="regime-tag">With Deductions</span>
+                </div>
+                <div class="slab-card-body">
+
+                    {% if slab_data.old_regime.standard_deduction %}
+                    <p class="slab-note">Standard Deduction: <strong>₹{{ "{:,.0f}".format(slab_data.old_regime.standard_deduction) }}</strong> on salary/pension.</p>
+                    {% endif %}
+
+                    <!-- GENERAL SLAB -->
+                    <p><strong>General (Below 60 years)</strong></p>
+                    <table class="slab-table">
+                        <thead>
+                            <tr><th>Income Range</th><th>Tax Rate</th></tr>
+                        </thead>
+                        <tbody>
+                            {% for slab in slab_data.old_regime.general %}
+                            <tr>
+                                <td>
+                                    {% if slab.from == 0 %}Up to ₹{{ "{:,.0f}".format(slab.to) }}
+                                    {% elif slab.to is none %}Above ₹{{ "{:,.0f}".format(slab.from) }}
+                                    {% else %}₹{{ "{:,.0f}".format(slab.from) }} – ₹{{ "{:,.0f}".format(slab.to) }}
+                                    {% endif %}
+                                </td>
+                                <td class="slab-rate {% if slab.rate == 0 %}rate-nil{% endif %}">{{ (slab.rate * 100) | int }}%</td>
+                            </tr>
+                            {% endfor %}
+                            <tr class="slab-footer-row">
+                                <td>+ Health &amp; Education Cess</td>
+                                <td>4% on tax</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <!-- SENIOR CITIZEN -->
+                    {% if slab_data.old_regime.senior_citizen %}
+                    <p style="margin-top:14px;"><strong>Senior Citizen (60–79 years)</strong></p>
+                    <table class="slab-table">
+                        <thead><tr><th>Income Range</th><th>Tax Rate</th></tr></thead>
+                        <tbody>
+                            {% for slab in slab_data.old_regime.senior_citizen %}
+                            <tr>
+                                <td>
+                                    {% if slab.from == 0 %}Up to ₹{{ "{:,.0f}".format(slab.to) }}
+                                    {% elif slab.to is none %}Above ₹{{ "{:,.0f}".format(slab.from) }}
+                                    {% else %}₹{{ "{:,.0f}".format(slab.from) }} – ₹{{ "{:,.0f}".format(slab.to) }}
+                                    {% endif %}
+                                </td>
+                                <td class="slab-rate {% if slab.rate == 0 %}rate-nil{% endif %}">{{ (slab.rate * 100) | int }}%</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    {% endif %}
+
+                    {% if slab_data.old_regime.rebate_87a %}
+                    <div class="rebate-box rebate-blue">
+                        <strong>Section 87A Rebate:</strong>
+                        Up to ₹{{ "{:,.0f}".format(slab_data.old_regime.rebate_87a.maximum) }} rebate
+                        if total income ≤ ₹{{ "{:,.0f}".format(slab_data.old_regime.rebate_87a.income_limit) }}.
+                    </div>
+                    {% endif %}
+
+                </div>
+            </div>
+            {% endif %}
+
+        </div>
+
+    </div>
+
+
+    <!-- =============================================
+         DEDUCTIONS SECTION
+    ============================================= -->
+
+    <div class="slab-section" id="section-deductions" style="display:none;">
+
+        <div class="info-box">
+            Deductions reduce your taxable income. Most are available under the <strong>Old Tax Regime</strong> only.
+        </div>
+
+        <div class="deduction-grid">
+            {% for rule in deduction_rules %}
+            <div class="deduction-card {% if rule.regime == 'both' %}deduction-both{% endif %}">
+                <div class="deduction-header">
+                    <span class="deduction-section">{{ rule.section }}</span>
+                    {% if rule.regime == 'both' %}
+                        <span class="badge badge-success">Both Regimes</span>
+                    {% else %}
+                        <span class="badge badge-info">Old Regime</span>
+                    {% endif %}
+                </div>
+                <h4>{{ rule.name }}</h4>
+                <p>{{ rule.description }}</p>
+                {% if rule.limit %}
+                <p class="deduction-limit">Limit: <strong>₹{{ "{:,.0f}".format(rule.limit) }}</strong></p>
+                {% elif rule.limit_note %}
+                <p class="deduction-limit">Limit: <strong>{{ rule.limit_note }}</strong></p>
+                {% endif %}
+                {% if rule.notes %}
+                <p class="deduction-note">💡 {{ rule.notes }}</p>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+
+    </div>
+
+
+    <!-- =============================================
+         ITR FORMS SECTION
+    ============================================= -->
+
+    <div class="slab-section" id="section-forms" style="display:none;">
+
+        <div class="info-box">
+            The correct ITR form depends on your income sources. Use the <strong>ITR Simulation</strong> for automatic form selection via the Decision Tree.
+        </div>
+
+        <div class="forms-grid">
+            {% for form in itr_forms %}
+            <div class="form-card">
+                <div class="form-card-header form-{{ form.color }}">
+                    <h3>{{ form.form }}</h3>
+                    <span>{{ form.name }}</span>
+                </div>
+                <div class="form-card-body">
+                    <p><em>{{ form.applicability }}</em></p>
+                    <p><strong>Applicable For:</strong></p>
+                    <ul>
+                        {% for source in form.income_sources %}
+                        <li>{{ source }}</li>
+                        {% endfor %}
+                    </ul>
+                    {% if form.not_applicable %}
+                    <p><strong>NOT Applicable If:</strong></p>
+                    <ul class="not-applicable-list">
+                        {% for cond in form.not_applicable %}
+                        <li>{{ cond }}</li>
+                        {% endfor %}
+                    </ul>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+    </div>
+
+
+    <!-- =============================================
+         REGIME COMPARISON SECTION
+    ============================================= -->
+
+    <div class="slab-section" id="section-regime" style="display:none;">
+
+        <div class="info-box">
+            Choose the regime that minimises your tax liability. Use the <strong>Tax Calculator</strong> to compare both regimes with your actual numbers.
+        </div>
+
+        <div class="regime-comparison-grid">
+
+            {% for regime_key, regime in regime_info.items() %}
+            <div class="regime-compare-card {% if regime.default %}regime-default{% endif %}">
+                {% if regime.default %}
+                <div class="default-badge">Default</div>
+                {% endif %}
+                <h3>{{ regime.name }}</h3>
+                <ul class="regime-features">
+                    {% for feature in regime.key_features %}
+                    <li>{{ feature }}</li>
+                    {% endfor %}
+                </ul>
+                <div class="regime-best-for">
+                    <strong>Best For:</strong> {{ regime.best_for }}
+                </div>
+            </div>
+            {% endfor %}
+
+        </div>
+
+        <div class="regime-cta" style="text-align:center; margin-top:24px;">
+            <a href="{{ url_for('tax_calculator') }}" class="btn btn-primary">
+                🧮 Compare with Tax Calculator
+            </a>
+        </div>
+
+    </div>
+
+
+    <!-- EDUCATIONAL NOTE -->
+    <div class="edu-notice" style="margin-top:24px;">
+        <strong>⚠️ Disclaimer:</strong>
+        Tax rules shown here are for educational reference based on the selected financial year.
+        Always verify with official Income Tax Department sources before filing.
+    </div>
+
+</div>
+
+
+{% block scripts %}
+<script>
+/* Slab section tab switching */
+document.querySelectorAll(".slab-tab").forEach(function(tab) {
+    tab.addEventListener("click", function() {
+        document.querySelectorAll(".slab-tab").forEach(t => t.classList.remove("active"));
+        this.classList.add("active");
+
+        document.querySelectorAll(".slab-section").forEach(s => s.style.display = "none");
+        const section = document.getElementById("section-" + this.dataset.section);
+        if (section) section.style.display = "block";
+    });
+});
+</script>
+{% endblock %}
+
+{% endblock %}

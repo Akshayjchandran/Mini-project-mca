@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block title %}Verify Email | ITR Learn &amp; Simulate{% endblock %}
+
+{% block content %}
+
+<div class="auth-wrapper">
+
+    <div class="auth-card">
+
+        <div class="auth-icon-badge">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 13V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v12c0 1.1.9 2 2 2h9"></path>
+                <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
+                <path d="m16 19 2 2 4-4"></path>
+            </svg>
+        </div>
+
+        <h2 class="auth-title">Verify your email</h2>
+
+        <p class="auth-subtitle">
+            Enter the 6-digit verification code sent to<br>
+            <strong style="color: #0f172a;">{{ email }}</strong>
+        </p>
+
+        {% if message %}
+            <div class="alert alert-error">
+                {{ message }}
+            </div>
+        {% endif %}
+
+        {% if dev_otp %}
+            <div class="dev-otp-card">
+                <div class="dev-otp-header">
+                    <span class="dev-tag">Academic Dev / Testing Mode</span>
+                </div>
+                <div class="dev-otp-body">
+                    <span>Generated Code: </span>
+                    <strong class="dev-otp-code" id="devOtpVal">{{ dev_otp }}</strong>
+                    <button type="button" class="btn-copy-otp" onclick="copyDevOtp()" title="Copy Code">Copy</button>
+                </div>
+                <small class="dev-otp-hint">In production with SMTP configured, this is delivered directly to your inbox.</small>
+            </div>
+        {% endif %}
+
+        <form method="POST" action="{{ url_for('verify_otp') }}" class="auth-form" novalidate>
+
+            <div class="form-group">
+                <label for="otp">Enter 6-Digit Code <span class="required">*</span></label>
+                <input type="text"
+                       id="otp"
+                       name="otp"
+                       class="form-control otp-input"
+                       placeholder="123456"
+                       maxlength="6"
+                       pattern="[0-9]*"
+                       inputmode="numeric"
+                       required
+                       autofocus
+                       autocomplete="one-time-code">
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-full btn-auth">
+                Verify &amp; Create Account
+            </button>
+
+        </form>
+
+        <div class="otp-resend-row">
+            <span>Didn't receive the code?</span>
+            <form method="POST" action="{{ url_for('resend_otp') }}" style="display:inline;">
+                <button type="submit" class="btn-link" id="resendBtn">Resend Code</button>
+            </form>
+        </div>
+
+        <p class="auth-footer">
+            Entered the wrong email?
+            <a href="{{ url_for('register') }}">Start over</a>
+        </p>
+
+    </div>
+
+</div>
+
+<script>
+function copyDevOtp() {
+    const code = document.getElementById('devOtpVal').innerText;
+    document.getElementById('otp').value = code;
+    document.getElementById('otp').focus();
+}
+</script>
+
+{% endblock %}

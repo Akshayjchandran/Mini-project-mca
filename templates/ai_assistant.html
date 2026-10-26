@@ -1,0 +1,200 @@
+{% extends "base.html" %}
+
+{% block title %}AI Assistant | ITR Learn &amp; Simulate{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/ai_assistant.js') }}" defer></script>
+{% endblock %}
+
+{% block content %}
+
+<div class="page-container">
+
+    <!-- HEADER -->
+
+    <div class="page-header">
+        <div>
+            <h1>🤖 AI Assistant</h1>
+            <p>Educational guidance powered by Gemini AI. Ask about ITR concepts, deductions, and tax rules.</p>
+        </div>
+        <div class="ai-badge">
+            <span class="badge {% if api_key_configured %}badge-success{% else %}badge-warning{% endif %}">
+                {% if api_key_configured %}● AI Online{% else %}⚠ API Key Not Set{% endif %}
+            </span>
+        </div>
+    </div>
+
+
+    <!-- NOTICE -->
+
+    <div class="ai-notice">
+        <strong>ℹ️ Educational Assistant Only.</strong>
+        This AI explains tax concepts and calculation results.
+        It does NOT file ITRs, access government portals, or calculate your final tax
+        (tax calculations are done by the rule-based engine).
+        Always verify information with official Income Tax Department sources.
+    </div>
+
+
+    {% if not api_key_configured %}
+
+    <!-- API KEY NOT CONFIGURED -->
+
+    <div class="ai-setup-card">
+        <div class="ai-setup-icon">🔑</div>
+        <h2>Gemini API Key Required</h2>
+        <p>To use the AI Assistant, you need to configure your Gemini API key.</p>
+        <ol class="setup-steps">
+            <li>Visit <strong>Google AI Studio</strong>: <code>https://aistudio.google.com/</code></li>
+            <li>Create a free Gemini API key.</li>
+            <li>Copy <code>.env.example</code> to <code>.env</code> in the project folder.</li>
+            <li>Add your key: <code>GEMINI_API_KEY=your-key-here</code></li>
+            <li>Add <code>from dotenv import load_dotenv; load_dotenv()</code> at the top of <code>app.py</code></li>
+            <li>Restart the Flask app.</li>
+        </ol>
+        <div class="edu-notice">
+            The API key is stored in <code>.env</code> which is excluded from Git
+            via <code>.gitignore</code>. It is NEVER exposed in HTML or JavaScript.
+        </div>
+    </div>
+
+    {% else %}
+
+    <!-- CHAT INTERFACE -->
+    <div class="chat-layout">
+
+        <!-- SIDEBAR: Quick Questions -->
+        <div class="chat-sidebar">
+            <div class="chat-sidebar-header">
+                <h3>💡 Quick Topics</h3>
+                <p>Click any prompt to ask instantly:</p>
+            </div>
+            <div class="quick-questions">
+                <button type="button" class="quick-question" data-question="What is the difference between old and new tax regime?">
+                    <span class="qq-icon">⚖️</span>
+                    <span class="qq-text">Old vs New Regime</span>
+                </button>
+                <button type="button" class="quick-question" data-question="What is Section 80C and what investments qualify?">
+                    <span class="qq-icon">🛡️</span>
+                    <span class="qq-text">Section 80C Deductions</span>
+                </button>
+                <button type="button" class="quick-question" data-question="How is Section 87A rebate calculated and who is eligible?">
+                    <span class="qq-icon">💰</span>
+                    <span class="qq-text">Section 87A Rebate</span>
+                </button>
+                <button type="button" class="quick-question" data-question="What is the standard deduction in the new tax regime?">
+                    <span class="qq-icon">📉</span>
+                    <span class="qq-text">Standard Deduction</span>
+                </button>
+                <button type="button" class="quick-question" data-question="Which ITR form should a salaried person choose (ITR-1 vs ITR-2)?">
+                    <span class="qq-icon">📑</span>
+                    <span class="qq-text">Which ITR Form?</span>
+                </button>
+                <button type="button" class="quick-question" data-question="What is residential status under Section 6 and why does it matter?">
+                    <span class="qq-icon">🌐</span>
+                    <span class="qq-text">Residential Status</span>
+                </button>
+                <button type="button" class="quick-question" data-question="What is Form 16 and how do I use it for filing ITR?">
+                    <span class="qq-icon">🏢</span>
+                    <span class="qq-text">Understanding Form 16</span>
+                </button>
+                <button type="button" class="quick-question" data-question="What is Capital Gains tax and how are STCG & LTCG taxed?">
+                    <span class="qq-icon">📈</span>
+                    <span class="qq-text">Capital Gains Tax</span>
+                </button>
+                <button type="button" class="quick-question" data-question="What is health and education cess and how is it computed?">
+                    <span class="qq-icon">🏥</span>
+                    <span class="qq-text">Health & Education Cess</span>
+                </button>
+                <button type="button" class="quick-question" data-question="What deductions are still allowed under the New Tax Regime?">
+                    <span class="qq-icon">✨</span>
+                    <span class="qq-text">New Regime Deductions</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- MAIN CHAT AREA -->
+        <div class="chat-main">
+
+            <!-- Chat Messages -->
+            <div class="chat-messages" id="chatMessages">
+
+                <!-- Welcome Message Card -->
+                <div class="chat-welcome" id="chatWelcome">
+                    <div class="chat-welcome-icon">🤖</div>
+                    <h3>Hello! I'm your ITR Learning Assistant</h3>
+                    <p>I'm powered by Google Gemini AI and designed to guide you through Indian Income Tax filing concepts and calculations.</p>
+                    
+                    <div class="welcome-features">
+                        <div class="feature-item">
+                            <span class="feature-bullet">✓</span>
+                            <span>ITR forms &amp; eligibility rules</span>
+                        </div>
+                        <div class="feature-item">
+                            <span class="feature-bullet">✓</span>
+                            <span>New vs Old regime comparison</span>
+                        </div>
+                        <div class="feature-item">
+                            <span class="feature-bullet">✓</span>
+                            <span>Chapter VI-A exemptions</span>
+                        </div>
+                        <div class="feature-item">
+                            <span class="feature-bullet">✓</span>
+                            <span>Section 6 residential status</span>
+                        </div>
+                    </div>
+                    <p class="welcome-tip">Select a question on the left or type your query below to begin.</p>
+                </div>
+
+                <!-- Typing Indicator -->
+                <div class="chat-message chat-assistant" id="typingIndicator" style="display:none;">
+                    <div class="chat-meta">
+                        <span class="meta-avatar">🤖</span>
+                        <span class="meta-name">AI Assistant</span>
+                    </div>
+                    <div class="chat-bubble typing-bubble">
+                        <div class="typing-indicator">
+                            <span></span><span></span><span></span>
+                        </div>
+                        <span class="typing-text">Thinking...</span>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Chat Input Area -->
+            <div class="chat-input-area">
+                <div class="chat-input-box">
+                    <textarea id="chatInput"
+                              placeholder="Ask about ITR concepts, deductions, tax regimes, forms..."
+                              rows="1"
+                              maxlength="2000"></textarea>
+                    <button id="sendButton" class="btn-send" type="button" title="Send query (Enter)">
+                        <span>Send</span>
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="22" y1="2" x2="11" y2="13"></line>
+                            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                        </svg>
+                    </button>
+                </div>
+                <div class="chat-input-actions">
+                    <span class="chat-hint">Press <strong>Enter</strong> to send, <strong>Shift + Enter</strong> for a new line.</span>
+                    <button id="clearChat" class="btn-clear-chat" type="button" title="Clear conversation history">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="3 6 5 6 21 6"></polyline>
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                        </svg>
+                        <span>Clear Chat</span>
+                    </button>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    {% endif %}
+
+</div>
+
+{% endblock %}

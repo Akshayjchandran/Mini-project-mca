@@ -1,0 +1,249 @@
+﻿{% extends "base.html" %}
+
+{% block title %}My Profile | ITR Learn &amp; Simulate{% endblock %}
+
+{% block content %}
+
+<div class="page-container profile-page-wrapper">
+
+    <!-- PAGE HEADER -->
+    <div class="profile-header-banner">
+        <div class="profile-header-left">
+            <span class="sim-hub-badge">
+                <span class="pulse-dot"></span> Academic Account Settings
+            </span>
+            <h1 class="profile-header-title">My Profile &amp; Portfolio</h1>
+            <p class="profile-header-subtitle">
+                Manage your student credentials, review your learning statistics, and track filing simulations.
+            </p>
+        </div>
+        <div class="profile-header-actions">
+            <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">
+                ← Back to Dashboard
+            </a>
+            <a href="{{ url_for('logout') }}" class="btn btn-outline" style="border-color: rgba(255,255,255,0.4); color: white;">
+                Logout
+            </a>
+        </div>
+    </div>
+
+    <!-- 2-COLUMN PROFILE LAYOUT -->
+    <div class="profile-two-column-grid">
+
+        <!-- LEFT COLUMN: USER IDENTITY & STATS -->
+        <div class="profile-col-left">
+
+            <!-- USER IDENTITY CARD -->
+            <div class="profile-panel-card">
+                <div class="user-identity-box">
+                    <div class="user-big-avatar">
+                        {{ user["name"][:2]|upper }}
+                    </div>
+                    <h2 class="user-display-name">{{ user["name"] }}</h2>
+                    <span class="user-display-email">{{ user["email"] }}</span>
+                    <div class="user-badge-row">
+                        <span class="badge-pill badge-completed">
+                            <span class="badge-dot dot-green"></span> Verified Student
+                        </span>
+                        <span class="badge-pill badge-neutral">
+                            ID #{{ user["id"] }}
+                        </span>
+                    </div>
+                </div>
+
+                <div class="user-meta-list">
+                    <div class="meta-row">
+                        <span class="meta-label">Member Since</span>
+                        <span class="meta-value">{{ user["created_at"][:10] if user["created_at"] else "Current Session" }}</span>
+                    </div>
+                    <div class="meta-row">
+                        <span class="meta-label">Assessment Year</span>
+                        <span class="meta-value">AY 2026-27</span>
+                    </div>
+                    <div class="meta-row">
+                        <span class="meta-label">Account Security</span>
+                        <span class="meta-value text-green">✓ Question Protected</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- LEARNING & PRACTICE PORTFOLIO CARD -->
+            <div class="profile-panel-card" style="margin-top: 20px;">
+                <div class="panel-card-header">
+                    <h3 class="panel-card-title">Learning &amp; Simulation Progress</h3>
+                    <span class="badge-pill badge-neutral">{{ stats.training_pct }}% Overall</span>
+                </div>
+
+                <div class="panel-stats-list">
+                    <div class="panel-stat-item">
+                        <div class="stat-item-left">
+                            <span class="stat-icon-wrap icon-indigo">📚</span>
+                            <div>
+                                <strong class="stat-title">Lessons Completed</strong>
+                                <span class="stat-sub">Curriculum progress</span>
+                            </div>
+                        </div>
+                        <span class="stat-number">{{ stats.lessons_completed }} / {{ stats.total_lessons }}</span>
+                    </div>
+
+                    <div class="progress-bar-wrap" style="margin-bottom: 16px;">
+                        <div class="progress-bar" style="width: {{ stats.training_pct }}%;"></div>
+                    </div>
+
+                    <div class="panel-stat-item">
+                        <div class="stat-item-left">
+                            <span class="stat-icon-wrap icon-green">✅</span>
+                            <div>
+                                <strong class="stat-title">Simulations Done</strong>
+                                <span class="stat-sub">Completed practice returns</span>
+                            </div>
+                        </div>
+                        <span class="stat-number">{{ stats.sims_completed }}</span>
+                    </div>
+
+                    <div class="panel-stat-item">
+                        <div class="stat-item-left">
+                            <span class="stat-icon-wrap icon-amber">✏️</span>
+                            <div>
+                                <strong class="stat-title">Saved Drafts</strong>
+                                <span class="stat-sub">In-progress returns</span>
+                            </div>
+                        </div>
+                        <span class="stat-number">{{ stats.drafts }}</span>
+                    </div>
+                </div>
+
+                <div class="panel-card-actions">
+                    <a href="{{ url_for('training') }}" class="btn btn-sm btn-primary">
+                        Continue Training →
+                    </a>
+                    <a href="{{ url_for('simulation') }}" class="btn btn-sm btn-secondary">
+                        ITR Simulation Hub →
+                    </a>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- RIGHT COLUMN: EDIT DETAILS & QUICK ACTIONS -->
+        <div class="profile-col-right">
+
+            <!-- EDIT ACCOUNT DETAILS CARD -->
+            <div class="profile-panel-card">
+                <div class="panel-card-header">
+                    <div>
+                        <h2 class="panel-card-title">Edit Account Details</h2>
+                        <p class="panel-card-subtitle">Update your profile name and contact number for this simulation device.</p>
+                    </div>
+                </div>
+
+                {% if message %}
+                    <div class="alert alert-error" style="margin-bottom: 16px;">{{ message }}</div>
+                {% endif %}
+
+                {% if success %}
+                    <div class="alert alert-success" style="margin-bottom: 16px;">{{ success }}</div>
+                {% endif %}
+
+                <form method="POST" novalidate class="profile-form">
+
+                    <div class="form-group">
+                        <label for="name" class="profile-field-label">Full Name <span class="required">*</span></label>
+                        <input type="text"
+                               id="name"
+                               name="name"
+                               class="form-control profile-input"
+                               value="{{ user['name'] }}"
+                               placeholder="e.g. Ananya Sharma"
+                               required>
+                    </div>
+
+                    <div class="form-group" style="margin-top: 16px;">
+                        <label for="email" class="profile-field-label">
+                            Email Address <span class="required">*</span>
+                            <span class="badge-pill badge-neutral" style="font-size: 10px; padding: 1px 6px;">Registered</span>
+                        </label>
+                        <input type="email"
+                               id="email"
+                               name="email"
+                               class="form-control profile-input"
+                               value="{{ user['email'] }}"
+                               required>
+                        <small class="form-hint">Used for 1st-time verification OTP and password recovery.</small>
+                    </div>
+
+                    <div class="form-group" style="margin-top: 16px;">
+                        <label for="phone" class="profile-field-label">
+                            Phone Number <small style="color: var(--muted); font-weight: normal;">(Optional)</small>
+                        </label>
+                        <input type="tel"
+                               id="phone"
+                               name="phone"
+                               class="form-control profile-input"
+                               value="{{ user['phone'] or '' }}"
+                               placeholder="e.g. 9876543210">
+                        <small class="form-hint">No phone verification is required for account creation or simulation.</small>
+                    </div>
+
+                    <div class="form-actions-row">
+                        <button type="submit" class="btn btn-primary btn-save-profile">
+                            💾 Save Profile Changes
+                        </button>
+                    </div>
+
+                </form>
+            </div>
+
+            <!-- QUICK ACCESS & TOOLS CARD -->
+            <div class="profile-panel-card" style="margin-top: 20px;">
+                <div class="panel-card-header">
+                    <h3 class="panel-card-title">Quick Access &amp; Simulation Shortcuts</h3>
+                    <p class="panel-card-subtitle">Quickly navigate to your filing documents and analytical tools.</p>
+                </div>
+
+                <div class="profile-shortcuts-grid">
+                    <a href="{{ url_for('drafts') }}" class="shortcut-box">
+                        <div class="shortcut-icon icon-amber">💾</div>
+                        <div class="shortcut-info">
+                            <strong>My Drafts</strong>
+                            <span>Resume saved filings</span>
+                        </div>
+                        <span class="shortcut-arrow">&rarr;</span>
+                    </a>
+
+                    <a href="{{ url_for('reports') }}" class="shortcut-box">
+                        <div class="shortcut-icon icon-blue">📑</div>
+                        <div class="shortcut-info">
+                            <strong>My Reports</strong>
+                            <span>View filed practice returns</span>
+                        </div>
+                        <span class="shortcut-arrow">&rarr;</span>
+                    </a>
+
+                    <a href="{{ url_for('tax_calculator') }}" class="shortcut-box">
+                        <div class="shortcut-icon icon-indigo">🧮</div>
+                        <div class="shortcut-info">
+                            <strong>Tax Calculator</strong>
+                            <span>New vs Old regime</span>
+                        </div>
+                        <span class="shortcut-arrow">&rarr;</span>
+                    </a>
+
+                    <a href="{{ url_for('ai_assistant') }}" class="shortcut-box">
+                        <div class="shortcut-icon icon-green">🤖</div>
+                        <div class="shortcut-info">
+                            <strong>AI Tax Assistant</strong>
+                            <span>Ask filing questions</span>
+                        </div>
+                        <span class="shortcut-arrow">&rarr;</span>
+                    </a>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

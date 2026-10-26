@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block title %}{{ lesson.title }} | ITR Training{% endblock %}
+
+{% block content %}
+
+<div class="page-container">
+
+    <!-- BREADCRUMB -->
+    <div class="breadcrumb">
+        <a href="{{ url_for('training') }}">← Training</a>
+        <span>/ Lesson {{ lesson_number }} of {{ total_lessons }}</span>
+    </div>
+
+
+    <!-- LESSON HEADER -->
+
+    <div class="lesson-header">
+        <div>
+            <span class="lesson-category-tag">{{ lesson.category }}</span>
+            <h1>{{ lesson.title }}</h1>
+            <p>⏱ Estimated time: {{ lesson.duration }}</p>
+        </div>
+        <div class="lesson-progress-indicator">
+            <span>Lesson {{ lesson_number }}</span>
+            <strong>of {{ total_lessons }}</strong>
+        </div>
+    </div>
+
+
+    <!-- LESSON CONTENT -->
+
+    <div class="lesson-content-card">
+        {{ lesson.content | safe }}
+    </div>
+
+
+    <!-- LESSON NAV -->
+
+    <div class="lesson-nav">
+
+        <div>
+            {% if prev_lesson %}
+                <a href="{{ url_for('training_lesson', lesson_id=prev_lesson.id) }}"
+                   class="btn btn-secondary">
+                    ← Previous: {{ prev_lesson.title }}
+                </a>
+            {% endif %}
+        </div>
+
+        <div class="lesson-nav-center">
+            <form method="POST"
+                  action="{{ url_for('complete_lesson', lesson_id=lesson.id) }}"
+                  id="completeLessonForm">
+                <button type="submit" class="btn btn-success">
+                    ✅ Mark as Completed
+                </button>
+            </form>
+        </div>
+
+        <div>
+            {% if next_lesson %}
+                <a href="{{ url_for('training_lesson', lesson_id=next_lesson.id) }}"
+                   class="btn btn-primary">
+                    Next: {{ next_lesson.title }} →
+                </a>
+            {% else %}
+                <a href="{{ url_for('training') }}" class="btn btn-primary">
+                    Finish Training →
+                </a>
+            {% endif %}
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

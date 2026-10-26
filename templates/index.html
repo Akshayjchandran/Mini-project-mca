@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+
+{% block title %}ITR Learn &amp; Simulate | Income Tax Return Training &amp; Simulation Platform{% endblock %}
+
+{% block content %}
+
+<!-- HERO SECTION (MATCHING IMAGE 2) -->
+<section class="hero-section">
+    <div class="container hero-container">
+        <div class="hero-badge">
+            <span class="pulse-dot"></span> AY 2026-27 &bull; FY 2025-26 Live Simulator
+        </div>
+        <h1 class="hero-title">Learn &amp; Practice Income Tax Filing</h1>
+        <p class="hero-subtitle">
+            ITR simulation with Form 16 and Form 26AS, and an AI help desk.
+        </p>
+        <div class="hero-actions">
+            <a href="{{ url_for('simulation_new') }}" class="btn-hero-solid">
+                File Income Tax Return &rarr;
+            </a>
+            <a href="{{ url_for('tax_calculator') }}" class="btn-hero-ghost">
+                Income Tax Calculator
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- OUR SERVICES SECTION (MATCHING IMAGE 2) -->
+<section class="services-section">
+    <div class="container">
+        <h2 class="services-title">Our Services</h2>
+        
+        <div class="services-grid">
+
+            <!-- SERVICE 1: Tax calculation -->
+            <a href="{{ url_for('tax_calculator') }}" class="service-card">
+                <div class="service-card-top">
+                    <div class="service-icon-badge badge-blue">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect width="16" height="20" x="4" y="2" rx="2"></rect>
+                            <line x1="8" x2="16" y1="6" y2="6"></line>
+                            <line x1="16" x2="16" y1="14" y2="18"></line>
+                            <path d="M16 10h.01"></path>
+                            <path d="M12 10h.01"></path>
+                            <path d="M8 10h.01"></path>
+                            <path d="M12 14h.01"></path>
+                            <path d="M8 14h.01"></path>
+                            <path d="M12 18h.01"></path>
+                            <path d="M8 18h.01"></path>
+                        </svg>
+                    </div>
+                    <h3 class="service-card-title">Tax calculation</h3>
+                    <p class="service-card-desc">
+                        Enter salary and deductions to see old vs new regime side by side, slab by slab
+                    </p>
+                </div>
+                <div class="service-card-link text-blue">
+                    Calculate my tax &rarr;
+                </div>
+            </a>
+
+            <!-- SERVICE 2: Tax training -->
+            <a href="{{ url_for('training') }}" class="service-card">
+                <div class="service-card-top">
+                    <div class="service-icon-badge badge-indigo">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"></path>
+                            <path d="M6 6h10"></path>
+                            <path d="M6 10h10"></path>
+                        </svg>
+                    </div>
+                    <h3 class="service-card-title">Tax training</h3>
+                    <p class="service-card-desc">
+                        Five short modules on returns, forms, regimes, documents and verification.
+                    </p>
+                </div>
+                <div class="service-card-link text-indigo">
+                    Start learning &rarr;
+                </div>
+            </a>
+
+            <!-- SERVICE 3: Tax simulation -->
+            <a href="{{ url_for('simulation') }}" class="service-card">
+                <div class="service-card-top">
+                    <div class="service-icon-badge badge-green">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                            <path d="m9 15 2 2 4-4"></path>
+                        </svg>
+                    </div>
+                    <h3 class="service-card-title">Tax simulation</h3>
+                    <p class="service-card-desc">
+                        File a full practice return with Form 16 abstraction, Form 26AS credits and a PDF report.
+                    </p>
+                </div>
+                <div class="service-card-link text-green">
+                    File a practice ITR &rarr;
+                </div>
+            </a>
+
+            <!-- SERVICE 4: AI assistance -->
+            <a href="{{ url_for('ai_assistant') }}" class="service-card">
+                <div class="service-card-top">
+                    <div class="service-icon-badge badge-cyan">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                            <path d="M8 9h8"></path>
+                            <path d="M8 13h6"></path>
+                        </svg>
+                    </div>
+                    <h3 class="service-card-title">AI assistance</h3>
+                    <p class="service-card-desc">
+                        Ask anything about forms, regimes, 80C, HRA, deadlines or refunds and get a precise answer.
+                    </p>
+                </div>
+                <div class="service-card-link text-cyan">
+                    Ask the assistant &rarr;
+                </div>
+            </a>
+
+        </div>
+    </div>
+</section>
+
+<!-- QUICK STATS & REASSURANCE BANNER -->
+<section class="banner-section">
+    <div class="container banner-inner">
+        <div class="banner-stat">
+            <span class="stat-number"></span>
+            <span class="stat-label"></span>
+        </div>
+        <div class="banner-stat">
+            <span class="stat-number"></span>
+            <span class="stat-label"></span>
+        </div>
+        <div class="banner-stat">
+            <span class="stat-number"></span>
+            <span class="stat-label"></span>
+        </div>
+        <div class="banner-stat">
+            <span class="stat-number"></span>
+            <span class="stat-label"></span>
+        </div>
+    </div>
+</section>
+
+{% endblock %}

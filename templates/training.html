@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block title %}ITR Training | ITR Learn &amp; Simulate{% endblock %}
+
+{% block content %}
+
+<div class="page-container">
+
+    <!-- HEADER -->
+
+    <div class="page-header">
+        <div>
+            <h1>📚 ITR Training</h1>
+            <p>Learn income tax concepts step by step — from basics to filing.</p>
+        </div>
+        <div class="training-progress-badge">
+            <strong>{{ completed_count }} / {{ total_lessons }}</strong>
+            <span>lessons completed</span>
+            <div class="progress-bar-wrap" style="margin-top:6px; width:120px;">
+                <div class="progress-bar" style="width: {{ progress_pct }}%"></div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- CATEGORY TABS -->
+
+    <div class="lesson-categories" id="lessonCategories">
+        <button class="category-btn active" data-category="all">All</button>
+        <button class="category-btn" data-category="Basics">Basics</button>
+        <button class="category-btn" data-category="ITR Forms">ITR Forms</button>
+        <button class="category-btn" data-category="Income">Income</button>
+        <button class="category-btn" data-category="Tax Regimes">Tax Regimes</button>
+        <button class="category-btn" data-category="Deductions">Deductions</button>
+        <button class="category-btn" data-category="Calculation">Calculation</button>
+        <button class="category-btn" data-category="Documents">Documents</button>
+    </div>
+
+
+    <!-- LESSON GRID -->
+
+    <div class="lesson-grid" id="lessonGrid">
+
+        {% for lesson in lessons %}
+
+        <div class="lesson-card {% if lesson.completed %}lesson-done{% endif %}"
+             data-category="{{ lesson.category }}">
+
+            <div class="lesson-card-top">
+                <span class="lesson-category-tag">{{ lesson.category }}</span>
+                {% if lesson.completed %}
+                    <span class="lesson-done-badge">✅ Completed</span>
+                {% endif %}
+            </div>
+
+            <h3 class="lesson-title">
+                {{ lesson.order }}. {{ lesson.title }}
+            </h3>
+
+            <div class="lesson-meta">
+                <span>⏱ {{ lesson.duration }}</span>
+            </div>
+
+            <div class="lesson-card-actions">
+
+                <a href="{{ url_for('training_lesson', lesson_id=lesson.id) }}"
+                   class="btn btn-primary btn-sm">
+                    {% if lesson.completed %}Review{% else %}Start Lesson{% endif %}
+                </a>
+
+                {% if not lesson.completed %}
+                <form method="POST"
+                      action="{{ url_for('complete_lesson', lesson_id=lesson.id) }}"
+                      style="display:inline;">
+                    <button type="submit" class="btn btn-secondary btn-sm">
+                        Mark Done ✓
+                    </button>
+                </form>
+                {% endif %}
+
+            </div>
+
+        </div>
+
+        {% endfor %}
+
+    </div>
+
+</div>
+
+
+{% block scripts %}
+<script>
+/*
+ * Category filter for lessons
+ */
+document.querySelectorAll(".category-btn").forEach(function(btn) {
+    btn.addEventListener("click", function() {
+        document.querySelectorAll(".category-btn").forEach(b => b.classList.remove("active"));
+        this.classList.add("active");
+
+        const cat = this.dataset.category;
+
+        document.querySelectorAll(".lesson-card").forEach(function(card) {
+            if (cat === "all" || card.dataset.category === cat) {
+                card.style.display = "";
+            } else {
+                card.style.display = "none";
+            }
+        });
+    });
+});
+</script>
+{% endblock %}
+
+{% endblock %}

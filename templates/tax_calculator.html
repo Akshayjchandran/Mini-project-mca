@@ -1,0 +1,343 @@
+{% extends "base.html" %}
+
+{% block title %}Tax Calculator | ITR Learn &amp; Simulate{% endblock %}
+
+{% block content %}
+
+<div class="calculator-page-wrapper">
+    <div class="container">
+
+        <!-- HEADER MATCHING IMAGE 4 -->
+        <div class="calc-page-header">
+            <div class="calc-icon-badge">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect width="16" height="20" x="4" y="2" rx="2"></rect>
+                    <line x1="8" x2="16" y1="6" y2="6"></line>
+                    <line x1="16" x2="16" y1="14" y2="18"></line>
+                    <path d="M16 10h.01"></path>
+                    <path d="M12 10h.01"></path>
+                    <path d="M8 10h.01"></path>
+                    <path d="M12 14h.01"></path>
+                    <path d="M8 14h.01"></path>
+                    <path d="M12 18h.01"></path>
+                    <path d="M8 18h.01"></path>
+                </svg>
+            </div>
+            <div>
+                <h1 class="calc-title">Tax calculator</h1>
+                <p class="calc-subtitle">AY 2026-27 (FY 2025-26)</p>
+            </div>
+        </div>
+
+        <!-- 2-COLUMN MAIN LAYOUT MATCHING IMAGE 4 -->
+        <div class="calc-layout-grid">
+
+            <!-- LEFT: YOUR NUMBERS CARD -->
+            <div class="calc-card calc-inputs-card">
+                <div class="calc-card-header">
+                    <h2 class="calc-card-title">Your numbers</h2>
+                    <p class="calc-card-subtitle">
+                        Enter what applies. Deduction fields are only used by the old regime.
+                    </p>
+                </div>
+
+                <div class="calc-inputs-grid">
+
+                    <!-- Gross annual salary -->
+                    <div class="calc-field-box">
+                        <label class="calc-field-label" for="inpSalary">Gross annual salary</label>
+                        <div class="calc-input-wrap">
+                            <span class="currency-symbol">₹</span>
+                            <input type="number" id="inpSalary" class="calc-input" value="0" min="0" step="1000">
+                        </div>
+                    </div>
+
+                    <!-- Interest income -->
+                    <div class="calc-field-box">
+                        <label class="calc-field-label" for="inpInterest">Interest income</label>
+                        <div class="calc-input-wrap">
+                            <span class="currency-symbol">₹</span>
+                            <input type="number" id="inpInterest" class="calc-input" value="0" min="0" step="500">
+                        </div>
+                    </div>
+
+                    <!-- Other income -->
+                    <div class="calc-field-box">
+                        <label class="calc-field-label" for="inpOther">Other income</label>
+                        <div class="calc-input-wrap">
+                            <span class="currency-symbol">₹</span>
+                            <input type="number" id="inpOther" class="calc-input" value="0" min="0" step="500">
+                        </div>
+                    </div>
+
+                    <!-- 80C investments -->
+                    <div class="calc-field-box box-tint-green">
+                        <label class="calc-field-label" for="inp80C">
+                            80C investments
+                            <small class="field-max-badge">max ₹1.5L</small>
+                        </label>
+                        <div class="calc-input-wrap">
+                            <span class="currency-symbol">₹</span>
+                            <input type="number" id="inp80C" class="calc-input" value="0" min="0" max="150000" step="1000">
+                        </div>
+                    </div>
+
+                    <!-- 80D health insurance -->
+                    <div class="calc-field-box box-tint-green">
+                        <label class="calc-field-label" for="inp80D">
+                            80D health insurance
+                            <small class="field-max-badge">max ₹75k</small>
+                        </label>
+                        <div class="calc-input-wrap">
+                            <span class="currency-symbol">₹</span>
+                            <input type="number" id="inp80D" class="calc-input" value="0" min="0" max="75000" step="1000">
+                        </div>
+                    </div>
+
+                    <!-- 80CCD(1B) NPS -->
+                    <div class="calc-field-box box-tint-green">
+                        <label class="calc-field-label" for="inp80CCD">
+                            80CCD(1B) NPS
+                            <small class="field-max-badge">max ₹50k</small>
+                        </label>
+                        <div class="calc-input-wrap">
+                            <span class="currency-symbol">₹</span>
+                            <input type="number" id="inp80CCD" class="calc-input" value="0" min="0" max="50000" step="1000">
+                        </div>
+                    </div>
+
+                    <!-- Home loan interest -->
+                    <div class="calc-field-box box-tint-blue" style="grid-column: span 2;">
+                        <label class="calc-field-label" for="inpHomeLoan">
+                            Home loan interest
+                            <small class="field-max-badge">Sec 24(b) max ₹2L</small>
+                        </label>
+                        <div class="calc-input-wrap">
+                            <span class="currency-symbol">₹</span>
+                            <input type="number" id="inpHomeLoan" class="calc-input" value="0" min="0" max="200000" step="1000">
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="calc-notice">
+                    <span>💡 Standard deduction of <strong>₹75,000</strong> for New Regime and <strong>₹50,000</strong> for Old Regime is applied automatically.</span>
+                </div>
+            </div>
+
+            <!-- RIGHT: 3 STACKED SUMMARY CARDS MATCHING IMAGE 4 -->
+            <div class="calc-results-column">
+
+                <!-- CARD 1: NEW REGIME -->
+                <div class="calc-card result-regime-card" id="cardNewRegime">
+                    <div class="regime-card-top">
+                        <span class="regime-name">New regime</span>
+                        <span class="regime-badge" id="badgeNew">Default</span>
+                    </div>
+                    <div class="regime-main-tax" id="valNewTax">₹ 0</div>
+                    <div class="regime-taxable-info">
+                        Taxable income <span id="valNewTaxable">₹ 0</span>
+                    </div>
+                </div>
+
+                <!-- CARD 2: OLD REGIME -->
+                <div class="calc-card result-regime-card" id="cardOldRegime">
+                    <div class="regime-card-top">
+                        <span class="regime-name">Old regime</span>
+                        <span class="regime-badge" id="badgeOld">Optional</span>
+                    </div>
+                    <div class="regime-main-tax" id="valOldTax">₹ 0</div>
+                    <div class="regime-taxable-info">
+                        Taxable income <span id="valOldTaxable">₹ 0</span>
+                    </div>
+                </div>
+
+                <!-- CARD 3: WORKING - NEW REGIME -->
+                <div class="calc-card working-breakdown-card">
+                    <h3 class="working-title">Working — new regime</h3>
+                    <div class="working-rows">
+                        <div class="working-row">
+                            <span class="working-label">Standard deduction</span>
+                            <span class="working-val" id="valStdDed">₹ 75,000</span>
+                        </div>
+                        <div class="working-row">
+                            <span class="working-label">Tax before cess</span>
+                            <span class="working-val" id="valTaxBeforeCess">₹ 0</span>
+                        </div>
+                        <div class="working-row">
+                            <span class="working-label">Rebate u/s 87A</span>
+                            <span class="working-val text-green" id="valRebate">₹ 0</span>
+                        </div>
+                        <div class="working-row">
+                            <span class="working-label">Cess @ 4%</span>
+                            <span class="working-val" id="valCess">₹ 0</span>
+                        </div>
+                        <div class="working-row working-divider"></div>
+                        <div class="working-row working-total">
+                            <span class="working-label">Total tax</span>
+                            <span class="working-val" id="valTotalTax">₹ 0</span>
+                        </div>
+                        <div class="working-row working-payable">
+                            <span class="working-label">Balance payable</span>
+                            <span class="working-val" id="valPayable">₹ 0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- REGIME RECOMMENDATION BANNER -->
+                <div class="regime-recommendation" id="regimeRecommendation" style="display:none;">
+                    <div class="rec-icon">🎯</div>
+                    <div class="rec-text" id="recMessage"></div>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+</div>
+
+<!-- REACTIVE INSTANT CALCULATION JAVASCRIPT -->
+<script>
+function fmtINR(val) {
+    const n = Math.round(Number(val) || 0);
+    return '₹ ' + n.toLocaleString('en-IN');
+}
+
+function computeClientTax() {
+    const salary = Math.max(0, parseFloat(document.getElementById('inpSalary').value) || 0);
+    const interest = Math.max(0, parseFloat(document.getElementById('inpInterest').value) || 0);
+    const other = Math.max(0, parseFloat(document.getElementById('inpOther').value) || 0);
+    const d80c = Math.min(150000, Math.max(0, parseFloat(document.getElementById('inp80C').value) || 0));
+    const d80d = Math.min(75000, Math.max(0, parseFloat(document.getElementById('inp80D').value) || 0));
+    const d80ccd = Math.min(50000, Math.max(0, parseFloat(document.getElementById('inp80CCD').value) || 0));
+    const homeLoan = Math.min(200000, Math.max(0, parseFloat(document.getElementById('inpHomeLoan').value) || 0));
+
+    const totalIncome = salary + interest + other;
+
+    // --- NEW REGIME (FY 2025-26) ---
+    const newStdDed = salary > 0 ? Math.min(salary, 75000) : 0;
+    const newTaxable = Math.max(0, totalIncome - newStdDed);
+    let newTax = 0;
+
+    // Slabs: 0-4L 0%, 4-8L 5%, 8-12L 10%, 12-16L 15%, 16-20L 20%, 20-24L 25%, >24L 30%
+    if (newTaxable > 2400000) newTax += (newTaxable - 2400000) * 0.30;
+    if (newTaxable > 2000000) newTax += (Math.min(newTaxable, 2400000) - 2000000) * 0.25;
+    if (newTaxable > 1600000) newTax += (Math.min(newTaxable, 2000000) - 1600000) * 0.20;
+    if (newTaxable > 1200000) newTax += (Math.min(newTaxable, 1600000) - 1200000) * 0.15;
+    if (newTaxable > 800000)  newTax += (Math.min(newTaxable, 1200000) - 800000) * 0.10;
+    if (newTaxable > 400000)  newTax += (Math.min(newTaxable, 800000) - 400000) * 0.05;
+
+    // 87A rebate for new regime (full rebate up to 12L, with statutory marginal relief for income just above 12L)
+    let newRebate = 0;
+    if (newTaxable <= 1200000 && newTaxable > 0) {
+        newRebate = newTax;
+    } else if (newTaxable > 1200000) {
+        // Proviso to Section 87A: Tax payable cannot exceed (Total Income - 12,00,000)
+        const incomeExcess = newTaxable - 1200000;
+        if (newTax > incomeExcess) {
+            newRebate = newTax - incomeExcess;
+        }
+    }
+    let newTaxAfterRebate = Math.max(0, newTax - newRebate);
+
+    // Surcharge (New Regime: >50L 10%, >1Cr 15%, >2Cr 25%)
+    let newSurcharge = 0;
+    if (newTaxable > 20000000) {
+        newSurcharge = newTaxAfterRebate * 0.25;
+    } else if (newTaxable > 10000000) {
+        newSurcharge = newTaxAfterRebate * 0.15;
+    } else if (newTaxable > 5000000) {
+        newSurcharge = newTaxAfterRebate * 0.10;
+    }
+
+    const newCess = Math.round((newTaxAfterRebate + newSurcharge) * 0.04);
+    let newTotalTax = Math.round((newTaxAfterRebate + newSurcharge + newCess) / 10) * 10;
+
+    // --- OLD REGIME ---
+    const oldStdDed = salary > 0 ? Math.min(salary, 50000) : 0;
+    const oldDeductions = d80c + d80d + d80ccd + homeLoan;
+    const oldTaxable = Math.max(0, totalIncome - oldStdDed - oldDeductions);
+    let oldTax = 0;
+
+    // Slabs: 0-2.5L 0%, 2.5-5L 5%, 5-10L 20%, >10L 30%
+    if (oldTaxable > 1000000) oldTax += (oldTaxable - 1000000) * 0.30;
+    if (oldTaxable > 500000)  oldTax += (Math.min(oldTaxable, 1000000) - 500000) * 0.20;
+    if (oldTaxable > 250000)  oldTax += (Math.min(oldTaxable, 500000) - 250000) * 0.05;
+
+    let oldRebate = 0;
+    if (oldTaxable <= 500000 && oldTaxable > 0) {
+        oldRebate = Math.min(oldTax, 12500);
+    }
+    let oldTaxAfterRebate = Math.max(0, oldTax - oldRebate);
+
+    // Surcharge (Old Regime)
+    let oldSurcharge = 0;
+    if (oldTaxable > 50000000) {
+        oldSurcharge = oldTaxAfterRebate * 0.37;
+    } else if (oldTaxable > 20000000) {
+        oldSurcharge = oldTaxAfterRebate * 0.25;
+    } else if (oldTaxable > 10000000) {
+        oldSurcharge = oldTaxAfterRebate * 0.15;
+    } else if (oldTaxable > 5000000) {
+        oldSurcharge = oldTaxAfterRebate * 0.10;
+    }
+
+    const oldCess = Math.round((oldTaxAfterRebate + oldSurcharge) * 0.04);
+    let oldTotalTax = Math.round((oldTaxAfterRebate + oldSurcharge + oldCess) / 10) * 10;
+
+    // Update DOM
+    document.getElementById('valNewTax').innerText = fmtINR(newTotalTax);
+    document.getElementById('valNewTaxable').innerText = fmtINR(newTaxable);
+
+    document.getElementById('valOldTax').innerText = fmtINR(oldTotalTax);
+    document.getElementById('valOldTaxable').innerText = fmtINR(oldTaxable);
+
+    document.getElementById('valStdDed').innerText = fmtINR(newStdDed);
+    document.getElementById('valTaxBeforeCess').innerText = fmtINR(newTax);
+    document.getElementById('valRebate').innerText = fmtINR(newRebate);
+    document.getElementById('valCess').innerText = fmtINR(newCess);
+    document.getElementById('valTotalTax').innerText = fmtINR(newTotalTax);
+    document.getElementById('valPayable').innerText = fmtINR(newTotalTax);
+
+    // Badges & Highlighting
+    const cardNew = document.getElementById('cardNewRegime');
+    const cardOld = document.getElementById('cardOldRegime');
+    const recBox = document.getElementById('regimeRecommendation');
+    const recMsg = document.getElementById('recMessage');
+
+    cardNew.classList.remove('regime-recommended');
+    cardOld.classList.remove('regime-recommended');
+
+    if (totalIncome > 0) {
+        recBox.style.display = 'flex';
+        if (newTotalTax < oldTotalTax) {
+            const diff = oldTotalTax - newTotalTax;
+            cardNew.classList.add('regime-recommended');
+            recMsg.innerHTML = '<strong>New Regime is recommended!</strong> It saves you <strong>' + fmtINR(diff) + '</strong> in tax.';
+        } else if (oldTotalTax < newTotalTax) {
+            const diff = newTotalTax - oldTotalTax;
+            cardOld.classList.add('regime-recommended');
+            recMsg.innerHTML = '<strong>Old Regime is recommended!</strong> Your deductions save you <strong>' + fmtINR(diff) + '</strong> in tax.';
+        } else {
+            recMsg.innerHTML = 'Both regimes result in the exact same tax liability.';
+        }
+    } else {
+        recBox.style.display = 'none';
+    }
+}
+
+// Bind live reactive calculation to all inputs
+['inpSalary', 'inpInterest', 'inpOther', 'inp80C', 'inp80D', 'inp80CCD', 'inpHomeLoan'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+        el.addEventListener('input', computeClientTax);
+        el.addEventListener('change', computeClientTax);
+    }
+});
+
+// Run initial calculation on page load
+document.addEventListener('DOMContentLoaded', computeClientTax);
+</script>
+
+{% endblock %}

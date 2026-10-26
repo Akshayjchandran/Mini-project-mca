@@ -1,0 +1,1579 @@
+{% extends "base.html" %}
+
+{% block title %}Step {{ step }}: {{ current_step_info.title }} | ITR Learn &amp; Simulate{% endblock %}
+
+{% block content %}
+
+<div class="simulation-flow-container">
+
+    <!-- STEPPER PROGRESS HEADER -->
+    <div class="stepper-card">
+        <div class="stepper-top-meta">
+            <div>
+                <span class="stepper-sim-title"><strong>{{ sim.title }}</strong></span>
+                <span class="stepper-sim-fy">&bull; Assessment Year: <strong>AY 2026-27 (FY 2025-26)</strong></span>
+                <span class="badge-pill badge-draft" style="margin-left: 8px;">Educational Simulation</span>
+            </div>
+            <div class="stepper-progress-text">
+                Step <strong>{{ step }}</strong> of <strong>{{ total_steps }}</strong> ({{ progress_pct }}% Completed)
+            </div>
+        </div>
+
+        <div class="stepper-progress-bar-wrap">
+            <div class="stepper-progress-fill" style="width: {{ progress_pct }}%;"></div>
+        </div>
+
+        <!-- 13 STEP BARS -->
+        <div class="stepper-nodes-row">
+            {% for s in steps %}
+            <a href="{% if s.step <= step %}{{ url_for('simulation_step', sim_id=sim.id, step=s.step) }}{% else %}#{% endif %}"
+               class="stepper-node {% if s.step == step %}active{% elif s.step < step %}completed{% else %}disabled{% endif %}"
+               title="{{ s.title }}">
+                <span class="node-circle">
+                    {% if s.step < step %}✓{% else %}{{ s.step }}{% endif %}
+                </span>
+                <span class="node-label">{{ s.code }}</span>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- MAIN FORM CONTAINER -->
+    <form method="POST" action="{{ url_for('simulation_step', sim_id=sim.id, step=step) }}" id="simStepForm" class="step-content-form" novalidate>
+
+        <div class="step-main-card">
+
+            <!-- ========================================================= -->
+            <!-- STEP 1: FILING SETUP & DEMOGRAPHICS (PART A) -->
+            <!-- ========================================================= -->
+            {% if step == 1 %}
+            {% set s1 = sim_data.get('step_1', {}) %}
+            
+            <div class="step-header-wrap">
+                <div>
+                    <h3 class="step-title-text">👤 Part A — General Information &amp; Filing Demographics</h3>
+                    <p class="text-sm text-muted" style="margin-top: 4px;">
+                        Set up the Assessment Year, statutory filing section under Section 139, PAN identity, and bank account for refund processing.
+                    </p>
+                </div>
+            </div>
+
+            <div class="edu-notice" style="margin-bottom: 20px;">
+                <strong>📋 Academic Simulation Note:</strong> Enter genuine or simulated taxpayer details. All data is saved securely in your local academic session.
+            </div>
+
+            <h4 class="sub-header">1. Assessment Year &amp; Filing Section</h4>
+            <div class="form-grid-2">
+                <div class="form-group">
+                    <label for="assessment_year">Assessment Year (AY) <span class="required">*</span></label>
+                    <select id="assessment_year" name="assessment_year" class="form-control" required>
+                        <option value="AY 2026-27" selected>AY 2026-27 (Financial Year 2025-26) — Current Filing Year</option>
+                        <option value="AY 2027-28" {% if s1.get('assessment_year') == 'AY 2027-28' %}selected{% endif %}>AY 2027-28 (Financial Year 2026-27) — Advance Practice</option>
+                    </select>
+                    <small class="form-hint">AY is the year following the FY in which income is assessed by the Income Tax Department.</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="filing_section">Filed under Section <span class="required">*</span></label>
+                    <select id="filing_section" name="filing_section" class="form-control" required>
+                        <option value="139(1)" {% if s1.get('filing_section') == '139(1)' or not s1.get('filing_section') %}selected{% endif %}>Section 139(1) &mdash; On or before due date (Normal Return)</option>
+                        <option value="139(4)" {% if s1.get('filing_section') == '139(4)' %}selected{% endif %}>Section 139(4) &mdash; After due date (Belated Return)</option>
+                        <option value="139(5)" {% if s1.get('filing_section') == '139(5)' %}selected{% endif %}>Section 139(5) &mdash; Revised Return</option>
+                    </select>
+                </div>
+            </div>
+
+            <h4 class="sub-header" style="margin-top: 20px;">2. Personal Demographics (PAN &amp; Contact Details)</h4>
+            <div class="form-grid-2">
+                <div class="form-group">
+                    <label for="name">Full Name (as per PAN) <span class="required">*</span></label>
+                    <input type="text" id="name" name="name" class="form-control"
+                           value="{{ s1.get('name', '') or session.get('user_name', '') }}" required
+                           placeholder="e.g., Rajesh Kumar">
+                </div>
+
+                <div class="form-group">
+                    <label for="pan">Permanent Account Number (PAN) <span class="required">*</span></label>
+                    <input type="text" id="pan" name="pan" class="form-control text-uppercase"
+                           value="{{ s1.get('pan', '') }}" required maxlength="10"
+                           placeholder="e.g., ABCDE1234F" style="letter-spacing: 2px;">
+                    <small class="form-hint">Format: 5 letters, 4 digits, 1 letter (e.g., ABCDE1234F)</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="dob">Date of Birth <span class="required">*</span></label>
+                    <input type="date" id="dob" name="dob" class="form-control"
+                           value="{{ s1.get('dob', '') }}" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="age">Age (as on 31st March) <span class="required">*</span></label>
+                    <input type="number" id="age" name="age" class="form-control" min="18" max="120"
+                           value="{{ s1.get('age', '') }}" required placeholder="e.g., 30">
+                    <small class="form-hint">Determines Senior Citizen (&ge;60) / Super Senior (&ge;80) slab benefits in Old Regime.</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="gender">Gender <span class="required">*</span></label>
+                    <select id="gender" name="gender" class="form-control" required>
+                        <option value="Male" {% if s1.get('gender') == 'Male' or not s1.get('gender') %}selected{% endif %}>Male</option>
+                        <option value="Female" {% if s1.get('gender') == 'Female' %}selected{% endif %}>Female</option>
+                        <option value="Other" {% if s1.get('gender') == 'Other' %}selected{% endif %}>Other</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="aadhaar">Aadhaar Number (12 Digits) <span class="text-muted">(For E-verification)</span></label>
+                    <input type="text" id="aadhaar" name="aadhaar" class="form-control" maxlength="14"
+                           value="{{ s1.get('aadhaar', '') }}" placeholder="XXXX XXXX 1234">
+                </div>
+
+                <div class="form-group">
+                    <label for="mobile">Mobile Number <span class="required">*</span></label>
+                    <input type="tel" id="mobile" name="mobile" class="form-control" maxlength="10"
+                           value="{{ s1.get('mobile', '') }}" required placeholder="e.g., 9876543210">
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Email Address <span class="required">*</span></label>
+                    <input type="email" id="email" name="email" class="form-control"
+                           value="{{ s1.get('email', '') }}" required placeholder="taxpayer@example.com">
+                </div>
+            </div>
+
+            <div class="form-group" style="margin-top: 15px;">
+                <label for="address">Flat / Door / Block No. &amp; Street Address <span class="required">*</span></label>
+                <input type="text" id="address" name="address" class="form-control"
+                       value="{{ s1.get('address', '') }}" required placeholder="e.g., 102, Shanti Nilayam, MG Road">
+            </div>
+
+            <div class="form-grid-2" style="margin-top: 15px;">
+                <div class="form-group">
+                    <label for="state">State / Union Territory <span class="required">*</span></label>
+                    <select id="state" name="state" class="form-control" required>
+                        {% for st in ["Andhra Pradesh", "Assam", "Bihar", "Delhi", "Gujarat", "Karnataka", "Kerala", "Maharashtra", "Punjab", "Rajasthan", "Tamil Nadu", "Telangana", "Uttar Pradesh", "West Bengal", "Other"] %}
+                        <option value="{{ st }}" {% if s1.get('state') == st or (not s1.get('state') and st == 'Karnataka') %}selected{% endif %}>{{ st }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="pincode">PIN Code (6 Digits) <span class="required">*</span></label>
+                    <input type="text" id="pincode" name="pincode" class="form-control" maxlength="6"
+                           value="{{ s1.get('pincode', '') }}" required placeholder="e.g., 560001">
+                </div>
+            </div>
+
+            <h4 class="sub-header" style="margin-top: 25px;">3. Bank Account Details (for Direct Refund Processing)</h4>
+            <div class="form-grid-2">
+                <div class="form-group">
+                    <label for="bank_name">Bank Name <span class="required">*</span></label>
+                    <input type="text" id="bank_name" name="bank_name" class="form-control"
+                           value="{{ s1.get('bank_name', '') }}" required placeholder="e.g., State Bank of India">
+                </div>
+                <div class="form-group">
+                    <label for="bank_account_no">Bank Account Number <span class="required">*</span></label>
+                    <input type="text" id="bank_account_no" name="bank_account_no" class="form-control"
+                           value="{{ s1.get('bank_account_no', '') }}" required placeholder="e.g., 38491029384">
+                </div>
+                <div class="form-group">
+                    <label for="ifsc_code">IFSC Code <span class="required">*</span></label>
+                    <input type="text" id="ifsc_code" name="ifsc_code" class="form-control text-uppercase"
+                           value="{{ s1.get('ifsc_code', '') }}" required maxlength="11" placeholder="e.g., SBIN0001234">
+                </div>
+                <div class="form-group">
+                    <label for="account_type">Account Type <span class="required">*</span></label>
+                    <select id="account_type" name="account_type" class="form-control" required>
+                        <option value="Savings" {% if s1.get('account_type') == 'Savings' or not s1.get('account_type') %}selected{% endif %}>Savings Account</option>
+                        <option value="Current" {% if s1.get('account_type') == 'Current' %}selected{% endif %}>Current Account</option>
+                    </select>
+                </div>
+            </div>
+
+
+            <!-- ========================================================= -->
+            <!-- STEP 2: RESIDENTIAL STATUS (SECTION 6 & SECTION 5) -->
+            <!-- ========================================================= -->
+            {% elif step == 2 %}
+            {% set s2 = sim_data.get('step_2', {}) %}
+            {% set curr_status = s2.get('residential_status_choice') or s2.get('residential_status') or (dt_result.status if dt_result else 'Resident and Ordinarily Resident (ROR)') %}
+
+            <div class="step-header-wrap">
+                <div>
+                    <h3 class="step-title-text">🌐 Step 2: Residential Status Assessment (Section 6)</h3>
+                    <p class="text-sm text-muted" style="margin-top: 4px;">
+                        Select your known status directly, or use our statutory questionnaire to calculate it under Section 6.
+                    </p>
+                </div>
+                <div>
+                    <button type="button" class="btn-helper-action" onclick="toggleResHelper()">
+                        <span>🔍 Help me determine my status</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="statutory-note-box">
+                <div class="statutory-note-header">
+                    <span class="statutory-tag">Statutory Assessment Note &bull; Section 6</span>
+                    <span class="statutory-law-ref">Income-tax Act, 1961</span>
+                </div>
+                <p class="statutory-note-text">
+                    Residential status dictates the scope of total income under Section 5. <strong>Residents (ROR)</strong> are taxed on global/worldwide income. <strong>Non-Residents (NR)</strong> and <strong>RNORs</strong> are taxed solely on Indian-sourced income and are legally ineligible for ITR-1 Sahaj under Rule 12.
+                </p>
+            </div>
+
+            <!-- DIRECT STATUS SELECTION -->
+            <div class="form-group" style="margin-top: 20px; background: #ffffff; padding: 20px; border: 1.5px solid var(--border); border-radius: 10px;">
+                <label for="residential_status_choice" style="font-size: 15px; font-weight: 700; color: var(--primary);">
+                    Select Residential Status for AY 2026-27 (FY 2025-26): <span class="required">*</span>
+                </label>
+                <select id="residential_status_choice" name="residential_status_choice" class="form-control" style="font-size: 14.5px; font-weight: 600; margin-top: 8px;" onchange="updateResBadge(this.value)">
+                    <option value="Resident and Ordinarily Resident (ROR)" {% if 'Ordinarily Resident' in curr_status and 'Not Ordinarily' not in curr_status %}selected{% endif %}>
+                        Resident and Ordinarily Resident (ROR) &mdash; Taxed on Worldwide Income (Eligible for ITR-1)
+                    </option>
+                    <option value="Resident but Not Ordinarily Resident (RNOR)" {% if 'Not Ordinarily Resident' in curr_status %}selected{% endif %}>
+                        Resident but Not Ordinarily Resident (RNOR) &mdash; Taxed on Indian Income (Must file ITR-2 / ITR-3)
+                    </option>
+                    <option value="Non-Resident (NR)" {% if 'Non-Resident' in curr_status or curr_status == 'NR' %}selected{% endif %}>
+                        Non-Resident (NR) &mdash; Taxed only on Indian Sourced Income (Must file ITR-2 / ITR-3)
+                    </option>
+                </select>
+                <input type="hidden" id="residential_status" name="residential_status" value="{{ curr_status }}">
+            </div>
+
+            <!-- INTERACTIVE HELPER PANEL (SECTION 6 QUESTIONNAIRE) -->
+            <div id="resHelperPanel" class="helper-panel" style="display: none;">
+                <div class="helper-panel-header">
+                    <div class="helper-panel-title">
+                        <span>📋 Section 6 Statutory Assessment Calculator</span>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-outline" onclick="toggleResHelper()">✕ Close Helper</button>
+                </div>
+                <p class="text-xs text-muted" style="margin-bottom: 16px;">
+                    Answer the statutory questions below to evaluate Basic Conditions u/s 6(1) and Additional Conditions u/s 6(6):
+                </p>
+
+                <div class="form-grid-2">
+                    <div class="form-group">
+                        <label for="days_in_india">Days stayed in India during FY 2025-26 <span class="required">*</span></label>
+                        <input type="number" id="days_in_india" name="days_in_india" class="form-control" min="0" max="366"
+                               value="{{ s2.get('days_in_india', '') }}" placeholder="e.g., 182">
+                        <small class="form-hint">Basic Condition 1: 182 days or more &rarr; Resident.</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="days_last_4_years">Days in India in preceding 4 Financial Years (2021-22 to 2024-25) <span class="required">*</span></label>
+                        <input type="number" id="days_last_4_years" name="days_last_4_years" class="form-control" min="0" max="1464"
+                               value="{{ s2.get('days_last_4_years', '') }}" placeholder="e.g., 365">
+                        <small class="form-hint">Basic Condition 2: 365 days in 4 years + 60 days in current FY &rarr; Resident.</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="days_last_7_years">Days in India in preceding 7 Financial Years (2018-19 to 2024-25) <span class="required">*</span></label>
+                        <input type="number" id="days_last_7_years" name="days_last_7_years" class="form-control" min="0" max="2562"
+                               value="{{ s2.get('days_last_7_years', '') }}" placeholder="e.g., 730">
+                        <small class="form-hint">ROR Condition 1: 730 days or more in preceding 7 years.</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="resident_9_of_10">Resident of India in at least 2 out of 10 preceding FYs? <span class="required">*</span></label>
+                        <select id="resident_9_of_10" name="resident_9_of_10" class="form-control">
+                            <option value="yes" {% if s2.get('resident_9_of_10', 'yes') == 'yes' %}selected{% endif %}>Yes</option>
+                            <option value="no" {% if s2.get('resident_9_of_10') == 'no' %}selected{% endif %}>No</option>
+                        </select>
+                        <small class="form-hint">ROR Condition 2: Must be resident in at least 2 of 10 preceding years.</small>
+                    </div>
+                </div>
+
+                <div style="margin-top: 15px; display:flex; gap:10px;">
+                    <button type="button" class="btn btn-primary btn-sm" onclick="calcClientResidentialStatus()">
+                        ⚡ Calculate &amp; Apply Status
+                    </button>
+                </div>
+
+                <div id="clientResResultBox" class="helper-result-card" style="display:none;">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <h4 id="clientResTitle" style="color: var(--primary); margin:0;"></h4>
+                        <span id="clientResBadge" class="badge-pill"></span>
+                    </div>
+                    <p id="clientResReason" class="text-sm" style="margin: 8px 0; color: var(--text);"></p>
+                    <div id="clientResScope" style="font-size:12.5px; padding:8px 12px; background:#f0f9ff; border-radius:6px; border:1px solid #bae6fd;"></div>
+                </div>
+            </div>
+
+            <!-- CURRENT EVALUATION BADGE -->
+            {% if dt_result %}
+            <div class="statutory-result-card" style="margin-top: 20px;">
+                <div class="statutory-result-header">
+                    <div>
+                        <span class="statutory-eval-tag">Active Status Summary</span>
+                        <h4 class="statutory-result-title">{{ curr_status }}</h4>
+                    </div>
+                    <div>
+                        {% if 'Ordinarily Resident' in curr_status and 'Not Ordinarily' not in curr_status %}
+                            <span class="badge-pill badge-completed"><span class="badge-dot dot-green"></span> Eligible for ITR-1 Sahaj (Subject to Limits)</span>
+                        {% elif 'Not Ordinarily Resident' in curr_status %}
+                            <span class="badge-pill badge-draft"><span class="badge-dot dot-amber"></span> RNOR (Must file ITR-2 or ITR-3)</span>
+                        {% else %}
+                            <span class="badge-pill badge-draft"><span class="badge-dot dot-red" style="background:#d32f2f;"></span> Non-Resident (Ineligible for ITR-1 Sahaj)</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="statutory-result-body">
+                    {% if dt_result.reason %}
+                    <p class="statutory-result-desc">{{ dt_result.reason }}</p>
+                    {% endif %}
+                    <div class="scope-tax-info" style="margin-top: 12px; padding: 12px; background: var(--bg); border-radius: 8px; border-left: 3px solid var(--primary);">
+                        <strong>📌 Scope of Total Income (Section 5):</strong>
+                        {% if dt_result.scope_of_income %}
+                            <p style="margin: 4px 0 0 0; font-size: 13px;">{{ dt_result.scope_of_income }}</p>
+                        {% elif 'Ordinarily Resident' in curr_status and 'Not Ordinarily' not in curr_status %}
+                            <p style="margin: 4px 0 0 0; font-size: 13px;">Under Section 5(1), worldwide/global income (both inside and outside India) is taxable in India.</p>
+                        {% else %}
+                            <p style="margin: 4px 0 0 0; font-size: 13px;">Under Section 5(2), only income received, accrued, or deemed to be received or accrued in India is taxable. Foreign income is non-taxable.</p>
+                        {% endif %}
+                    </div>
+                    {% if dt_result.form_restriction %}
+                    <div class="form-restriction-info" style="margin-top: 8px; padding: 10px 12px; background: #fff8e1; border-radius: 6px; border: 1px solid #ffe082; font-size: 12.5px; color: #5d4037;">
+                        <strong>📋 Rule 12 Return Applicability:</strong> {{ dt_result.form_restriction }}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
+
+            <!-- ========================================================= -->
+            <!-- STEP 3: ITR FORM SELECTION & RULE 12 WIZARD -->
+            <!-- ========================================================= -->
+            {% elif step == 3 %}
+            {% set s3 = sim_data.get('step_3', {}) %}
+            {% set chosen_form = s3.get('selected_itr_form') or (dt_result.form_code if dt_result else 'ITR-1') %}
+
+            <div class="step-header-wrap">
+                <div>
+                    <h3 class="step-title-text">🌳 Step 3: Select Applicable ITR Form (Rule 12)</h3>
+                    <p class="text-sm text-muted" style="margin-top: 4px;">
+                        Choose your return form directly, or use the statutory suitability wizard for deterministic Rule 12 guidance.
+                    </p>
+                </div>
+                <div>
+                    <button type="button" class="btn-helper-action" onclick="toggleItrHelper()">
+                        <span>🎯 Help me choose the right ITR form</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="info-box" style="margin-bottom: 20px;">
+                <strong>🌳 Rule 12 — Return Selection Procedure:</strong>
+                Filing an incorrect ITR form renders your return defective under Section 139(9). Select from ITR-1, ITR-2, ITR-3, or ITR-4 below based on your sources of income and residential classification.
+            </div>
+
+            <!-- INTERACTIVE SUITABILITY WIZARD -->
+            <div id="itrHelperPanel" class="helper-panel" style="display: none;">
+                <div class="helper-panel-header">
+                    <div class="helper-panel-title">
+                        <span>🎯 Rule 12 Statutory Form Eligibility Wizard</span>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-outline" onclick="toggleItrHelper()">✕ Close Helper</button>
+                </div>
+                <p class="text-xs text-muted" style="margin-bottom: 16px;">
+                    Answer these 6 statutory qualifying questions to evaluate Rule 12 eligibility:
+                </p>
+
+                <div class="form-grid-2">
+                    <div class="form-group">
+                        <label>Do you have Salary or Pension income?</label>
+                        <select id="wiz_salary" name="salary_income" class="form-control" onchange="evalClientItrForm()">
+                            <option value="yes" {% if s3.get('salary_income', 'yes') == 'yes' %}selected{% endif %}>Yes</option>
+                            <option value="no" {% if s3.get('salary_income') == 'no' %}selected{% endif %}>No</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>How many House Properties do you own?</label>
+                        <select id="wiz_hp" name="multiple_house_property" class="form-control" onchange="evalClientItrForm()">
+                            <option value="no" {% if s3.get('multiple_house_property') != 'yes' %}selected{% endif %}>One Single House Property (Eligible for ITR-1 / 4)</option>
+                            <option value="yes" {% if s3.get('multiple_house_property') == 'yes' %}selected{% endif %}>Multiple Properties (&gt;1 forces ITR-2 / 3)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Do you have Capital Gains (Sale of shares, mutual funds, land)?</label>
+                        <select id="wiz_cg" name="capital_gains" class="form-control" onchange="evalClientItrForm()">
+                            <option value="no" {% if s3.get('capital_gains') != 'yes' %}selected{% endif %}>No Capital Gains</option>
+                            <option value="yes" {% if s3.get('capital_gains') == 'yes' %}selected{% endif %}>Yes (Forces ITR-2 / 3)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Do you have Business or Professional income?</label>
+                        <select id="wiz_business" name="business_income" class="form-control" onchange="evalClientItrForm()">
+                            <option value="no" {% if s3.get('business_income') != 'yes' %}selected{% endif %}>No Business Income</option>
+                            <option value="yes" {% if s3.get('business_income') == 'yes' %}selected{% endif %}>Yes (Forces ITR-3 or ITR-4 Presumptive)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Opting for Presumptive Taxation (u/s 44AD / 44ADA / 44AE)?</label>
+                        <select id="wiz_presumptive" name="presumptive_taxation" class="form-control" onchange="evalClientItrForm()">
+                            <option value="no" {% if s3.get('presumptive_taxation') != 'yes' %}selected{% endif %}>No (Regular books or not applicable)</option>
+                            <option value="yes" {% if s3.get('presumptive_taxation') == 'yes' %}selected{% endif %}>Yes (Presumptive Scheme &rarr; ITR-4 Sugam)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Do you have Foreign Assets or Foreign Income?</label>
+                        <select id="wiz_foreign" name="foreign_income" class="form-control" onchange="evalClientItrForm()">
+                            <option value="no" {% if s3.get('foreign_income') != 'yes' %}selected{% endif %}>No Foreign Assets/Income</option>
+                            <option value="yes" {% if s3.get('foreign_income') == 'yes' %}selected{% endif %}>Yes (Forces ITR-2 / 3)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Does your Total Gross Income exceed ₹50 Lakhs?</label>
+                        <select id="wiz_income50l" name="income_above_50l" class="form-control" onchange="evalClientItrForm()">
+                            <option value="no" {% if s3.get('income_above_50l') != 'yes' %}selected{% endif %}>No (Up to ₹50 Lakhs)</option>
+                            <option value="yes" {% if s3.get('income_above_50l') == 'yes' %}selected{% endif %}>Yes (&gt; ₹50 Lakhs forces ITR-2 / 3)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="clientItrResultBox" class="helper-result-card" style="margin-top: 15px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <h4 id="clientItrTitle" style="color: var(--primary); margin:0;">Recommended: ITR-1 (SAHAJ)</h4>
+                        <button type="button" class="btn btn-sm btn-primary" onclick="applyRecommendedItr()">
+                            ✓ Apply This Form
+                        </button>
+                    </div>
+                    <p id="clientItrReason" class="text-sm" style="margin-top: 6px; color: var(--text);">
+                        Standard return form for resident individuals with simple salary, one house property, and interest income up to ₹50 Lakhs.
+                    </p>
+                </div>
+            </div>
+
+            <!-- DIRECT FORM SELECTION CARDS (ITR-1, ITR-2, ITR-3, ITR-4) -->
+            <div id="directFormSelect" style="margin-top: 10px;">
+                <h4 style="margin-bottom: 12px; color: var(--primary);">Choose Return Form:</h4>
+                <div class="form-selection-list">
+                    <label class="itr-form-radio-card {% if chosen_form == 'ITR-1' %}selected{% endif %}">
+                        <input type="radio" name="selected_itr_form" value="ITR-1" {% if chosen_form == 'ITR-1' %}checked{% endif %}
+                               onchange="selectFormCard(this)">
+                        <div>
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <strong>ITR-1 (SAHAJ)</strong>
+                                <span class="badge-pill badge-neutral" style="font-size:11px;">Salaried / Resident</span>
+                            </div>
+                            <p>For Resident Individuals having Total Income up to ₹50 Lakhs from Salary, One House Property, and Other Sources (interest, dividend). No Capital Gains or Business income.</p>
+                        </div>
+                    </label>
+
+                    <label class="itr-form-radio-card {% if chosen_form == 'ITR-2' %}selected{% endif %}">
+                        <input type="radio" name="selected_itr_form" value="ITR-2" {% if chosen_form == 'ITR-2' %}checked{% endif %}
+                               onchange="selectFormCard(this)">
+                        <div>
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <strong>ITR-2</strong>
+                                <span class="badge-pill badge-neutral" style="font-size:11px;">Capital Gains / Multiple HP / NRI</span>
+                            </div>
+                            <p>For Individuals and HUFs not having business income, but having Capital Gains, Foreign Assets/Income, more than one house property, Total Income &gt; ₹50 Lakhs, or Non-Residents.</p>
+                        </div>
+                    </label>
+
+                    <label class="itr-form-radio-card {% if chosen_form == 'ITR-3' %}selected{% endif %}">
+                        <input type="radio" name="selected_itr_form" value="ITR-3" {% if chosen_form == 'ITR-3' %}checked{% endif %}
+                               onchange="selectFormCard(this)">
+                        <div>
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <strong>ITR-3</strong>
+                                <span class="badge-pill badge-neutral" style="font-size:11px;">Business / Professional</span>
+                            </div>
+                            <p>For Individuals and HUFs having income from Profits and Gains of Business or Profession with books of accounts, freelance work, or partnership firms.</p>
+                        </div>
+                    </label>
+
+                    <label class="itr-form-radio-card {% if chosen_form == 'ITR-4' %}selected{% endif %}">
+                        <input type="radio" name="selected_itr_form" value="ITR-4" {% if chosen_form == 'ITR-4' %}checked{% endif %}
+                               onchange="selectFormCard(this)">
+                        <div>
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <strong>ITR-4 (SUGAM)</strong>
+                                <span class="badge-pill badge-neutral" style="font-size:11px;">Presumptive Scheme</span>
+                            </div>
+                            <p>For Resident Individuals, HUFs and small business taxpayers opting for Presumptive Taxation u/s 44AD (turnover), 44ADA (professionals), or 44AE with total income up to ₹50 Lakhs.</p>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+
+            <!-- ========================================================= -->
+            <!-- STEP 4: SOURCE DOCUMENTS (FORM 16, AIS, 26AS) & SCHEDULES -->
+            <!-- ========================================================= -->
+            {% elif step == 4 %}
+            {% set s4 = sim_data.get('step_4', {}) %}
+            {% set active_schedules = s4.get('selected_schedules', ['sched_salary', 'sched_hp', 'sched_os', 'sched_via', 'sched_tax']) %}
+
+            <div class="step-header-wrap">
+                <div>
+                    <h3 class="step-title-text">📄 Step 4: Source Documents &amp; Applicable Schedules</h3>
+                    <p class="text-sm text-muted" style="margin-top: 4px;">
+                        Manually enter figures from Form 16, AIS, and Form 26AS. These values connect directly to income schedules and tax credits.
+                    </p>
+                </div>
+            </div>
+
+            <!-- SOURCE DOCUMENT TABS -->
+            <div class="source-doc-tabs">
+                <button type="button" class="source-doc-tab-btn active" onclick="switchDocTab('tabForm16', this)">
+                    📋 Form 16 (Salary TDS Certificate)
+                </button>
+                <button type="button" class="source-doc-tab-btn" onclick="switchDocTab('tabAIS', this)">
+                    📊 AIS (Annual Information Statement)
+                </button>
+                <button type="button" class="source-doc-tab-btn" onclick="switchDocTab('tab26AS', this)">
+                    💳 Form 26AS (Tax Credit Statement)
+                </button>
+            </div>
+
+            <!-- 1. FORM 16 SECTION -->
+            <div id="tabForm16" class="doc-section-card">
+                <h4 style="color: var(--primary); margin-bottom: 12px;">Form 16 Part A &amp; Part B Entry</h4>
+                <p class="text-xs text-muted" style="margin-bottom: 16px;">
+                    Enter the employer TAN, gross salary u/s 17(1), allowances u/s 10, and TDS deducted as certified in Form 16.
+                </p>
+                <div class="form-grid-2">
+                    <div class="form-group">
+                        <label for="employer_name">Employer Name</label>
+                        <input type="text" id="employer_name" name="employer_name" class="form-control"
+                               value="{{ s4.get('employer_name', '') }}" placeholder="e.g., Infosys Ltd / TCS">
+                    </div>
+                    <div class="form-group">
+                        <label for="employer_tan">Employer TAN (Tax Deduction Acc No.)</label>
+                        <input type="text" id="employer_tan" name="employer_tan" class="form-control text-uppercase" maxlength="10"
+                               value="{{ s4.get('employer_tan', '') }}" placeholder="e.g., BLRI01234F">
+                    </div>
+                    <div class="form-group">
+                        <label for="form16_gross_salary">Gross Salary as per Section 17(1) (₹)</label>
+                        <input type="number" id="form16_gross_salary" name="gross_salary" class="form-control" min="0" step="1000"
+                               value="{{ s4.get('gross_salary', '') }}" placeholder="e.g., 850000">
+                    </div>
+                    <div class="form-group">
+                        <label for="form16_exempt_allowances">Allowances Exempt u/s 10 (HRA, etc.) (₹)</label>
+                        <input type="number" id="form16_exempt_allowances" name="exempt_allowances" class="form-control" min="0" step="500"
+                               value="{{ s4.get('exempt_allowances', '') }}" placeholder="e.g., 60000">
+                    </div>
+                    <div class="form-group">
+                        <label for="form16_tds">Total TDS Deducted by Employer (₹)</label>
+                        <input type="number" id="form16_tds" name="tds_salary" class="form-control" min="0" step="500"
+                               value="{{ s4.get('tds_salary', '') }}" placeholder="e.g., 25000">
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. AIS SECTION -->
+            <div id="tabAIS" class="doc-section-card" style="display:none;">
+                <h4 style="color: var(--primary); margin-bottom: 12px;">Annual Information Statement (AIS) Details</h4>
+                <p class="text-xs text-muted" style="margin-bottom: 16px;">
+                    Enter financial transactions reported by reporting entities (banks, mutual funds, companies) in AIS:
+                </p>
+                <div class="form-grid-2">
+                    <div class="form-group">
+                        <label for="ais_savings_interest">Savings Bank Interest Reported in AIS (₹)</label>
+                        <input type="number" id="ais_savings_interest" name="savings_interest" class="form-control" min="0" step="100"
+                               value="{{ s4.get('savings_interest', '') }}" placeholder="e.g., 12000">
+                    </div>
+                    <div class="form-group">
+                        <label for="ais_fd_interest">Fixed Deposit (FD) / Term Deposit Interest (₹)</label>
+                        <input type="number" id="ais_fd_interest" name="fd_interest" class="form-control" min="0" step="500"
+                               value="{{ s4.get('fd_interest', '') }}" placeholder="e.g., 25000">
+                    </div>
+                    <div class="form-group">
+                        <label for="ais_dividend">Dividend Income Reported in AIS (₹)</label>
+                        <input type="number" id="ais_dividend" name="dividend_income" class="form-control" min="0" step="100"
+                               value="{{ s4.get('dividend_income', '') }}" placeholder="e.g., 4500">
+                    </div>
+                    <div class="form-group">
+                        <label for="ais_stcg">Short-Term Capital Gains (Equity / MFs) (₹)</label>
+                        <input type="number" id="ais_stcg" name="stcg_111a" class="form-control" min="0" step="1000"
+                               value="{{ s4.get('stcg_111a', '') }}" placeholder="e.g., 30000">
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. FORM 26AS SECTION -->
+            <div id="tab26AS" class="doc-section-card" style="display:none;">
+                <h4 style="color: var(--primary); margin-bottom: 12px;">Form 26AS (Annual Tax Statement)</h4>
+                <p class="text-xs text-muted" style="margin-bottom: 16px;">
+                    Reconcile prepaid taxes and advance tax payments recorded against your PAN:
+                </p>
+                <div class="form-grid-2">
+                    <div class="form-group">
+                        <label for="form26as_tds_other">TDS on Interest &amp; Other Non-Salary (₹)</label>
+                        <input type="number" id="form26as_tds_other" name="tds_other" class="form-control" min="0" step="500"
+                               value="{{ s4.get('tds_other', '') }}" placeholder="e.g., 2500">
+                    </div>
+                    <div class="form-group">
+                        <label for="form26as_tcs">Tax Collected at Source (TCS) (₹)</label>
+                        <input type="number" id="form26as_tcs" name="tcs" class="form-control" min="0" step="500"
+                               value="{{ s4.get('tcs', '') }}" placeholder="e.g., 0">
+                    </div>
+                    <div class="form-group">
+                        <label for="form26as_advance_tax">Advance Tax Paid (Challan 280) (₹)</label>
+                        <input type="number" id="form26as_advance_tax" name="advance_tax" class="form-control" min="0" step="500"
+                               value="{{ s4.get('advance_tax', '') }}" placeholder="e.g., 10000">
+                    </div>
+                    <div class="form-group">
+                        <label for="form26as_self_tax">Self-Assessment Tax Paid (₹)</label>
+                        <input type="number" id="form26as_self_tax" name="self_assessment_tax" class="form-control" min="0" step="500"
+                               value="{{ s4.get('self_assessment_tax', '') }}" placeholder="e.g., 0">
+                    </div>
+                </div>
+            </div>
+
+            <h4 style="margin: 25px 0 12px 0; color: var(--primary);">Schedule Selection for Chosen Return:</h4>
+            <div class="schedule-grid" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px;">
+                <label class="schedule-item-card" style="display:flex; gap:12px; padding:16px; border:1px solid var(--border); border-radius:10px; background:var(--bg); cursor:pointer;">
+                    <input type="checkbox" name="selected_schedules" value="sched_salary" {% if 'sched_salary' in active_schedules %}checked{% endif %}>
+                    <div>
+                        <strong>Schedule S &mdash; Salary</strong>
+                        <p class="text-xs text-muted" style="margin-top:4px;">Salary, allowances u/s 10, standard deduction u/s 16(ia).</p>
+                    </div>
+                </label>
+
+                <label class="schedule-item-card" style="display:flex; gap:12px; padding:16px; border:1px solid var(--border); border-radius:10px; background:var(--bg); cursor:pointer;">
+                    <input type="checkbox" name="selected_schedules" value="sched_hp" {% if 'sched_hp' in active_schedules %}checked{% endif %}>
+                    <div>
+                        <strong>Schedule HP &mdash; House Property</strong>
+                        <p class="text-xs text-muted" style="margin-top:4px;">Annual rent, municipal taxes, 30% deduction, loan interest u/s 24(b).</p>
+                    </div>
+                </label>
+
+                <label class="schedule-item-card" style="display:flex; gap:12px; padding:16px; border:1px solid var(--border); border-radius:10px; background:var(--bg); cursor:pointer;">
+                    <input type="checkbox" name="selected_schedules" value="sched_os" {% if 'sched_os' in active_schedules %}checked{% endif %}>
+                    <div>
+                        <strong>Schedule OS &mdash; Other Sources</strong>
+                        <p class="text-xs text-muted" style="margin-top:4px;">Savings bank interest, fixed deposits, dividends, family pension.</p>
+                    </div>
+                </label>
+
+                <label class="schedule-item-card" style="display:flex; gap:12px; padding:16px; border:1px solid var(--border); border-radius:10px; background:var(--bg); cursor:pointer;">
+                    <input type="checkbox" name="selected_schedules" value="sched_cg" {% if 'sched_cg' in active_schedules %}checked{% endif %}>
+                    <div>
+                        <strong>Schedule CG &mdash; Capital Gains</strong>
+                        <p class="text-xs text-muted" style="margin-top:4px;">STCG u/s 111A (20%) and LTCG u/s 112A (12.5% above ₹1.25L).</p>
+                    </div>
+                </label>
+
+                <label class="schedule-item-card" style="display:flex; gap:12px; padding:16px; border:1px solid var(--border); border-radius:10px; background:var(--bg); cursor:pointer;">
+                    <input type="checkbox" name="selected_schedules" value="sched_bp" {% if 'sched_bp' in active_schedules %}checked{% endif %}>
+                    <div>
+                        <strong>Schedule BP / 44AD &mdash; Business/Profession</strong>
+                        <p class="text-xs text-muted" style="margin-top:4px;">Business profits or presumptive income u/s 44AD / 44ADA.</p>
+                    </div>
+                </label>
+
+                <label class="schedule-item-card" style="display:flex; gap:12px; padding:16px; border:1px solid var(--border); border-radius:10px; background:var(--bg); cursor:pointer;">
+                    <input type="checkbox" name="selected_schedules" value="sched_via" {% if 'sched_via' in active_schedules %}checked{% endif %}>
+                    <div>
+                        <strong>Schedule VIA &mdash; Chapter VI-A Deductions</strong>
+                        <p class="text-xs text-muted" style="margin-top:4px;">Deductions under Sections 80C, 80CCD(1B), 80D, 80E, 80G, 80TTA.</p>
+                    </div>
+                </label>
+
+                <label class="schedule-item-card" style="display:flex; gap:12px; padding:16px; border:1px solid var(--border); border-radius:10px; background:var(--bg); cursor:pointer;">
+                    <input type="checkbox" name="selected_schedules" value="sched_tax" {% if 'sched_tax' in active_schedules %}checked{% endif %}>
+                    <div>
+                        <strong>Schedule Taxes Paid &mdash; TDS &amp; Advance Tax</strong>
+                        <p class="text-xs text-muted" style="margin-top:4px;">Tax credits from Form 16, Form 26AS, AIS, and Advance Tax challans.</p>
+                    </div>
+                </label>
+            </div>
+
+
+            <!-- ========================================================= -->
+            <!-- STEP 5: SCHEDULE S — SALARY INCOME (SECTION 17) -->
+            <!-- ========================================================= -->
+            {% elif step == 5 %}
+            {% set s5 = sim_data.get('step_5', {}) %}
+            {% set s4_prev = sim_data.get('step_4', {}) %}
+
+            <div class="step-header-wrap">
+                <div>
+                    <h3 class="step-title-text">💼 Step 5: Schedule S — Salary Income (Section 17)</h3>
+                    <p class="text-sm text-muted" style="margin-top: 4px;">
+                        Enter details of salary income, allowances exempt u/s 10, and professional tax paid.
+                    </p>
+                </div>
+            </div>
+
+            <div class="form-grid-2">
+                <div class="form-group">
+                    <label for="gross_salary">Gross Salary as per Section 17(1) (₹) <span class="required">*</span></label>
+                    <input type="number" id="gross_salary" name="gross_salary" class="form-control" min="0" step="1000"
+                           value="{{ s5.get('gross_salary', s4_prev.get('gross_salary', '')) }}" required placeholder="e.g., 750000">
+                </div>
+
+                <div class="form-group">
+                    <label for="perquisites">Value of Perquisites as per Section 17(2) (₹)</label>
+                    <input type="number" id="perquisites" name="perquisites" class="form-control" min="0" step="500"
+                           value="{{ s5.get('perquisites', '') }}" placeholder="0">
+                </div>
+
+                <div class="form-group">
+                    <label for="exempt_allowances">Allowances Exempt u/s 10 (HRA, Conveyance) (₹)</label>
+                    <input type="number" id="exempt_allowances" name="exempt_allowances" class="form-control" min="0" step="500"
+                           value="{{ s5.get('exempt_allowances', s4_prev.get('exempt_allowances', '')) }}" placeholder="0">
+                    <small class="form-hint">Note: HRA exemption is allowed only under the Old Tax Regime.</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="professional_tax">Professional Tax Paid u/s 16(iii) (₹)</label>
+                    <input type="number" id="professional_tax" name="professional_tax" class="form-control" min="0" max="2500" step="100"
+                           value="{{ s5.get('professional_tax', '') }}" placeholder="e.g., 2400">
+                </div>
+            </div>
+
+            <div class="statutory-note-box" style="margin-top: 20px;">
+                <div class="statutory-note-header">
+                    <span class="statutory-tag">Standard Deduction u/s 16(ia)</span>
+                    <span class="statutory-law-ref">Auto-Calculated by Engine</span>
+                </div>
+                <p class="statutory-note-text">
+                    For FY 2025-26, Standard Deduction is <strong>₹75,000</strong> under the New Tax Regime, and <strong>₹50,000</strong> under the Old Tax Regime. The engine applies this automatically during computation.
+                </p>
+            </div>
+
+
+            <!-- ========================================================= -->
+            <!-- STEP 6: SCHEDULE HP — HOUSE PROPERTY (SECTION 22–24) -->
+            <!-- ========================================================= -->
+            {% elif step == 6 %}
+            {% set s6 = sim_data.get('step_6', {}) %}
+
+            <div class="step-header-wrap">
+                <div>
+                    <h3 class="step-title-text">🏠 Step 6: Schedule HP — Income from House Property (Section 22–24)</h3>
+                    <p class="text-sm text-muted" style="margin-top: 4px;">
+                        Report self-occupied property loan interest or let-out property rental income.
+                    </p>
+                </div>
+            </div>
+
+            <div class="form-grid-2">
+                <div class="form-group">
+                    <label for="property_type">Type of House Property <span class="required">*</span></label>
+                    <select id="property_type" name="property_type" class="form-control" required>
+                        <option value="Self-Occupied" {% if s6.get('property_type') == 'Self-Occupied' or not s6.get('property_type') %}selected{% endif %}>Self-Occupied (No rental income; loan interest deductible)</option>
+                        <option value="Let-Out" {% if s6.get('property_type') == 'Let-Out' %}selected{% endif %}>Let-Out (Tenant occupied; rental income taxable)</option>
+                        <option value="Deemed-Let-Out" {% if s6.get('property_type') == 'Deemed-Let-Out' %}selected{% endif %}>Deemed Let-Out</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="gross_rent">Gross Rent Received / Receivable per Annum (₹)</label>
+                    <input type="number" id="gross_rent" name="gross_rent" class="form-control" min="0" step="1000"
+                           value="{{ s6.get('gross_rent', '') }}" placeholder="0">
+                </div>
+
+                <div class="form-group">
+                    <label for="municipal_taxes">Municipal Taxes Paid by Owner during FY (₹)</label>
+                    <input type="number" id="municipal_taxes" name="municipal_taxes" class="form-control" min="0" step="500"
+                           value="{{ s6.get('municipal_taxes', '') }}" placeholder="0">
+                </div>
+
+                <div class="form-group">
+                    <label for="housing_loan_interest">Interest on Housing Loan u/s 24(b) (₹)</label>
+                    <input type="number" id="housing_loan_interest" name="housing_loan_interest" class="form-control" min="0" step="1000"
+                           value="{{ s6.get('housing_loan_interest', '') }}" placeholder="0">
+                    <small class="form-hint">Deductible up to ₹2,00,000 for self-occupied in Old Regime.</small>
+                </div>
+            </div>
+
+            <div class="form-group" style="margin-top: 15px;">
+                <label for="house_property_income">Net Income / (Loss) from House Property (₹)</label>
+                <input type="number" id="house_property_income" name="house_property_income" class="form-control" step="500"
+                       value="{{ s6.get('house_property_income', '') }}" placeholder="0">
+                <small class="form-hint">Can be positive (rental profit) or negative (interest loss u/s 24(b)).</small>
+            </div>
+
+
+            <!-- ========================================================= -->
+            <!-- STEP 7: SCHEDULE OS, CG & BP — OTHER SOURCES, CAPITAL GAINS & BUSINESS -->
+            <!-- ========================================================= -->
+            {% elif step == 7 %}
+            {% set s7 = sim_data.get('step_7', {}) %}
+            {% set s4_prev = sim_data.get('step_4', {}) %}
+            {% set s3_prev = sim_data.get('step_3', {}) %}
+
+            <div class="step-header-wrap">
+                <div>
+                    <h3 class="step-title-text">📈 Step 7: Schedule OS, CG &amp; BP — Other Sources, Capital Gains &amp; Business</h3>
+                    <p class="text-sm text-muted" style="margin-top: 4px;">
+                        Report interest, dividends, capital gains, or business/professional earnings.
+                    </p>
+                </div>
+            </div>
+
+            <h4 class="sub-header">1. Schedule OS &mdash; Income from Other Sources (Section 56)</h4>
+            <div class="form-grid-2">
+                <div class="form-group">
+                    <label for="savings_interest">Savings Bank Account Interest (₹)</label>
+                    <input type="number" id="savings_interest" name="savings_interest" class="form-control" min="0" step="100"
+                           value="{{ s7.get('savings_interest', s4_prev.get('savings_interest', '')) }}" placeholder="0">
+                    <small class="form-hint">Eligible for Section 80TTA deduction up to ₹10,000 in Old Regime.</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="fd_interest">Fixed Deposit (FD) / Term Deposit Interest (₹)</label>
+                    <input type="number" id="fd_interest" name="fd_interest" class="form-control" min="0" step="500"
+                           value="{{ s7.get('fd_interest', s4_prev.get('fd_interest', '')) }}" placeholder="0">
+                </div>
+
+                <div class="form-group">
+                    <label for="dividend_income">Dividend Income from Shares / Mutual Funds (₹)</label>
+                    <input type="number" id="dividend_income" name="dividend_income" class="form-control" min="0" step="100"
+                           value="{{ s7.get('dividend_income', s4_prev.get('dividend_income', '')) }}" placeholder="0">
+                </div>
+
+                <div class="form-group">
+                    <label for="family_pension">Family Pension Received (₹)</label>
+                    <input type="number" id="family_pension" name="family_pension" class="form-control" min="0" step="1000"
+                           value="{{ s7.get('family_pension', '') }}" placeholder="0">
+                </div>
+            </div>
+
+            <div class="form-group" style="margin-top: 10px;">
+                <label for="other_sources_income">Total Other Sources Income (₹) <span class="required">*</span></label>
+                <input type="number" id="other_sources_income" name="other_sources_income" class="form-control" min="0" step="100"
+                       value="{{ s7.get('other_sources_income', '') }}" required placeholder="0">
+            </div>
+
+            <!-- CAPITAL GAINS SECTION (FOR ITR-2 / ITR-3) -->
+            <h4 class="sub-header" style="margin-top: 25px;">2. Schedule CG &mdash; Capital Gains (Section 45–55)</h4>
+            <div class="form-grid-2">
+                <div class="form-group">
+                    <label for="stcg_111a">Short-Term Capital Gains u/s 111A (Equity with STT @ 20%) (₹)</label>
+                    <input type="number" id="stcg_111a" name="stcg_111a" class="form-control" min="0" step="1000"
+                           value="{{ s7.get('stcg_111a', s4_prev.get('stcg_111a', '')) }}" placeholder="0">
+                </div>
+
+                <div class="form-group">
+                    <label for="ltcg_112a">Long-Term Capital Gains u/s 112A (Listed Equity @ 12.5% > ₹1.25L) (₹)</label>
+                    <input type="number" id="ltcg_112a" name="ltcg_112a" class="form-control" min="0" step="1000"
+                           value="{{ s7.get('ltcg_112a', '') }}" placeholder="0">
+                </div>
+
+                <div class="form-group">
+                    <label for="ltcg_112">Other Long-Term Capital Gains u/s 112 (Property/Gold) (₹)</label>
+                    <input type="number" id="ltcg_112" name="ltcg_112" class="form-control" min="0" step="1000"
+                           value="{{ s7.get('ltcg_112', '') }}" placeholder="0">
+                </div>
+
+                <div class="form-group">
+                    <label for="capital_gains_amount">Total Capital Gains (₹)</label>
+                    <input type="number" id="capital_gains_amount" name="capital_gains_amount" class="form-control" min="0" step="1000"
+                           value="{{ s7.get('capital_gains_amount', '') }}" placeholder="0">
+                </div>
+            </div>
+
+            <!-- BUSINESS & PROFESSION SECTION (FOR ITR-3 / ITR-4) -->
+            <h4 class="sub-header" style="margin-top: 25px;">3. Schedule BP / Presumptive Business (ITR-3 / ITR-4)</h4>
+            <div class="form-grid-2">
+                <div class="form-group">
+                    <label for="turnover_44ad">Gross Turnover / Receipts (Section 44AD / 44ADA / Business) (₹)</label>
+                    <input type="number" id="turnover_44ad" name="turnover_44ad" class="form-control" min="0" step="1000"
+                           value="{{ s7.get('turnover_44ad', '') }}" placeholder="0">
+                </div>
+                <div class="form-group">
+                    <label for="presumptive_income">Presumptive / Net Business Income u/s 44AD / 44ADA / BP (₹)</label>
+                    <input type="number" id="presumptive_income" name="presumptive_income" class="form-control" min="0" step="1000"
+                           value="{{ s7.get('presumptive_income', '') }}" placeholder="0">
+                    <small class="form-hint">Min 6% on digital / 8% on cash turnover for 44AD; Min 50% for 44ADA professionals.</small>
+                </div>
+            </div>
+
+
+            <!-- ========================================================= -->
+            <!-- STEP 8: SCHEDULE VIA — CHAPTER VI-A DEDUCTIONS -->
+            <!-- ========================================================= -->
+            {% elif step == 8 %}
+            {% set s8 = sim_data.get('step_8', {}) %}
+
+            <div class="step-header-wrap">
+                <div>
+                    <h3 class="step-title-text">➖ Step 8: Schedule VIA — Chapter VI-A Deductions</h3>
+                    <p class="text-sm text-muted" style="margin-top: 4px;">
+                        Enter eligible statutory investments and payments (applies when opting for the Old Tax Regime).
+                    </p>
+                </div>
+            </div>
+
+            <div class="edu-notice" style="margin-bottom: 20px;">
+                <strong>➖ Chapter VI-A Note:</strong> Under the New Tax Regime (Section 115BAC), Chapter VI-A deductions are foregone in exchange for lower slab rates and a higher rebate of ₹60,000 up to ₹12 Lakhs. They apply fully if you opt for the Old Tax Regime.
+            </div>
+
+            <div class="form-grid-2">
+                <div class="form-group">
+                    <label for="deduction_80c">Section 80C &mdash; PPF, EPF, ELSS, Life Insurance, Tuition Fees (₹)</label>
+                    <input type="number" id="deduction_80c" name="deduction_80c" class="form-control" min="0" max="150000" step="1000"
+                           value="{{ s8.get('deduction_80c', '') }}" placeholder="0">
+                    <small class="form-hint">Maximum statutory limit: ₹1,50,000</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="deduction_80ccd">Section 80CCD(1B) &mdash; National Pension System (NPS Tier-I) (₹)</label>
+                    <input type="number" id="deduction_80ccd" name="deduction_80ccd" class="form-control" min="0" max="50000" step="1000"
+                           value="{{ s8.get('deduction_80ccd', '') }}" placeholder="0">
+                    <small class="form-hint">Additional NPS contribution limit: ₹50,000</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="deduction_80d">Section 80D &mdash; Health Insurance Premium (Self &amp; Family) (₹)</label>
+                    <input type="number" id="deduction_80d" name="deduction_80d" class="form-control" min="0" max="100000" step="1000"
+                           value="{{ s8.get('deduction_80d', '') }}" placeholder="0">
+                    <small class="form-hint">Up to ₹25,000 for self/family, +₹50,000 for senior citizen parents.</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="deduction_80e">Section 80E &mdash; Interest on Higher Education Loan (₹)</label>
+                    <input type="number" id="deduction_80e" name="deduction_80e" class="form-control" min="0" step="1000"
+                           value="{{ s8.get('deduction_80e', '') }}" placeholder="0">
+                    <small class="form-hint">No upper monetary limit (allowable for up to 8 years).</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="deduction_80g">Section 80G &mdash; Donations to Approved Relief Funds / Charities (₹)</label>
+                    <input type="number" id="deduction_80g" name="deduction_80g" class="form-control" min="0" step="1000"
+                           value="{{ s8.get('deduction_80g', '') }}" placeholder="0">
+                </div>
+
+                <div class="form-group">
+                    <label for="deduction_80tta">Section 80TTA &mdash; Interest on Savings Bank Accounts (₹)</label>
+                    <input type="number" id="deduction_80tta" name="deduction_80tta" class="form-control" min="0" max="10000" step="500"
+                           value="{{ s8.get('deduction_80tta', '') }}" placeholder="0">
+                    <small class="form-hint">Maximum limit: ₹10,000 (non-senior citizens).</small>
+                </div>
+            </div>
+
+
+            <!-- ========================================================= -->
+            <!-- STEP 9: TAXES PAID & TAX CREDITS -->
+            <!-- ========================================================= -->
+            {% elif step == 9 %}
+            {% set s9 = sim_data.get('step_9', {}) %}
+            {% set s4_prev = sim_data.get('step_4', {}) %}
+
+            <div class="step-header-wrap">
+                <div>
+                    <h3 class="step-title-text">💳 Step 9: Schedule Taxes Paid &amp; Tax Credits</h3>
+                    <p class="text-sm text-muted" style="margin-top: 4px;">
+                        Reconcile prepaid tax credits matching Form 16, Form 26AS, and AIS.
+                    </p>
+                </div>
+            </div>
+
+            <div class="form-grid-2">
+                <div class="form-group">
+                    <label for="tds_salary">TDS deducted by Employer on Salary (Form 16 / 26AS) (₹)</label>
+                    <input type="number" id="tds_salary" name="tds_salary" class="form-control" min="0" step="500"
+                           value="{{ s9.get('tds_salary', s4_prev.get('tds_salary', '')) }}" placeholder="0">
+                </div>
+
+                <div class="form-group">
+                    <label for="tds_other">TDS deducted on Interest, Dividends &amp; Others (Form 26AS) (₹)</label>
+                    <input type="number" id="tds_other" name="tds_other" class="form-control" min="0" step="500"
+                           value="{{ s9.get('tds_other', s4_prev.get('tds_other', '')) }}" placeholder="0">
+                </div>
+
+                <div class="form-group">
+                    <label for="tcs">Tax Collected at Source (TCS) (₹)</label>
+                    <input type="number" id="tcs" name="tcs" class="form-control" min="0" step="500"
+                           value="{{ s9.get('tcs', s4_prev.get('tcs', '')) }}" placeholder="0">
+                </div>
+
+                <div class="form-group">
+                    <label for="advance_tax">Advance Tax Paid (Challan 280 / ITNS) (₹)</label>
+                    <input type="number" id="advance_tax" name="advance_tax" class="form-control" min="0" step="500"
+                           value="{{ s9.get('advance_tax', s4_prev.get('advance_tax', '')) }}" placeholder="0">
+                </div>
+
+                <div class="form-group">
+                    <label for="self_assessment_tax">Self-Assessment Tax Paid before Filing (₹)</label>
+                    <input type="number" id="self_assessment_tax" name="self_assessment_tax" class="form-control" min="0" step="500"
+                           value="{{ s9.get('self_assessment_tax', s4_prev.get('self_assessment_tax', '')) }}" placeholder="0">
+                </div>
+            </div>
+
+
+            <!-- ========================================================= -->
+            <!-- STEP 10: TAX LIABILITY CALCULATION & REGIME CHOICE -->
+            <!-- ========================================================= -->
+            {% elif step == 10 %}
+            {% set s10 = sim_data.get('step_10', {}) %}
+            {% set selected_regime = s10.get('regime') or 'new' %}
+
+            <div class="step-header-wrap">
+                <div>
+                    <h3 class="step-title-text">⚖️ Step 10: Part B-TTI — Computation of Tax Liability &amp; Regime Choice</h3>
+                    <p class="text-sm text-muted" style="margin-top: 4px;">
+                        Compare deterministic tax liabilities between New Regime (Section 115BAC) and Old Regime.
+                    </p>
+                </div>
+            </div>
+
+            {% if live_tax_calc %}
+            <div class="regime-comparison-table-wrap" style="margin-bottom: 25px;">
+                <table class="saas-data-table" style="width: 100%;">
+                    <thead>
+                        <tr>
+                            <th>Parameter</th>
+                            <th>New Tax Regime (Section 115BAC) &bull; Default</th>
+                            <th>Old Tax Regime (Traditional) &bull; Optional</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Gross Total Income</td>
+                            <td>₹{{ "{:,.0f}".format(live_tax_calc.new.gross_income) }}</td>
+                            <td>₹{{ "{:,.0f}".format(live_tax_calc.old.gross_income) }}</td>
+                        </tr>
+                        <tr>
+                            <td>Standard Deduction u/s 16(ia)</td>
+                            <td>₹{{ "{:,.0f}".format(live_tax_calc.new.standard_deduction) }}</td>
+                            <td>₹{{ "{:,.0f}".format(live_tax_calc.old.standard_deduction) }}</td>
+                        </tr>
+                        <tr>
+                            <td>Chapter VI-A Deductions (80C, 80D, etc.)</td>
+                            <td class="text-muted">₹0 (Foregone)</td>
+                            <td>₹{{ "{:,.0f}".format(live_tax_calc.old.total_deductions) }}</td>
+                        </tr>
+                        <tr>
+                            <td>Total Taxable Income (Rounded u/s 288A)</td>
+                            <td><strong>₹{{ "{:,.0f}".format(live_tax_calc.new.taxable_income) }}</strong></td>
+                            <td><strong>₹{{ "{:,.0f}".format(live_tax_calc.old.taxable_income) }}</strong></td>
+                        </tr>
+                        <tr>
+                            <td>Tax at Normal Slab Rates</td>
+                            <td>₹{{ "{:,.0f}".format(live_tax_calc.new.tax_before_rebate) }}</td>
+                            <td>₹{{ "{:,.0f}".format(live_tax_calc.old.tax_before_rebate) }}</td>
+                        </tr>
+                        <tr>
+                            <td>Rebate under Section 87A (incl. marginal relief)</td>
+                            <td>₹{{ "{:,.0f}".format(live_tax_calc.new.rebate) }}</td>
+                            <td>₹{{ "{:,.0f}".format(live_tax_calc.old.rebate) }}</td>
+                        </tr>
+                        {% if live_tax_calc.new.surcharge > 0 or live_tax_calc.old.surcharge > 0 %}
+                        <tr>
+                            <td>Surcharge (Income > ₹50 Lakh)</td>
+                            <td>₹{{ "{:,.0f}".format(live_tax_calc.new.surcharge) }}</td>
+                            <td>₹{{ "{:,.0f}".format(live_tax_calc.old.surcharge) }}</td>
+                        </tr>
+                        {% endif %}
+                        <tr>
+                            <td>Health &amp; Education Cess (4%)</td>
+                            <td>₹{{ "{:,.0f}".format(live_tax_calc.new.cess) }}</td>
+                            <td>₹{{ "{:,.0f}".format(live_tax_calc.old.cess) }}</td>
+                        </tr>
+                        <tr style="background: var(--bg); font-weight: bold;">
+                            <td>TOTAL TAX LIABILITY (Rounded u/s 288B)</td>
+                            <td style="color: var(--primary); font-size: 16px;">₹{{ "{:,.0f}".format(live_tax_calc.new.total_tax) }}</td>
+                            <td style="color: var(--primary); font-size: 16px;">₹{{ "{:,.0f}".format(live_tax_calc.old.total_tax) }}</td>
+                        </tr>
+                        <tr>
+                            <td>Recommendation Verdict</td>
+                            <td colspan="2">
+                                <span class="badge-pill badge-completed">
+                                    💡 Recommended: <strong>{{ "New Tax Regime" if live_tax_calc.better_regime == 'new' else "Old Tax Regime" }}</strong>
+                                    (Saves ₹{{ "{:,.0f}".format(live_tax_calc.tax_diff) }})
+                                </span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            {% endif %}
+
+            <h4 style="margin-top: 20px;">Choose Your Tax Regime:</h4>
+            <div class="regime-selection-grid">
+                <label class="regime-option-card {% if selected_regime == 'new' %}selected{% endif %}">
+                    <input type="radio" name="regime" value="new" {% if selected_regime == 'new' %}checked{% endif %}
+                           onchange="document.querySelectorAll('.regime-option-card').forEach(c => c.classList.remove('selected')); this.closest('.regime-option-card').classList.add('selected');">
+                    <div class="regime-card-content">
+                        <div class="default-badge">DEFAULT REGIME</div>
+                        <h3>New Tax Regime (Section 115BAC)</h3>
+                        <div class="regime-highlights">
+                            <span class="highlight-tag">✨ Slabs up to ₹4 Lakh @ 0%</span>
+                            <span class="highlight-tag">✨ Standard Deduction ₹75,000</span>
+                            <span class="highlight-tag">✨ Full Rebate up to ₹12 Lakh</span>
+                        </div>
+                    </div>
+                </label>
+
+                <label class="regime-option-card {% if selected_regime == 'old' %}selected{% endif %}">
+                    <input type="radio" name="regime" value="old" {% if selected_regime == 'old' %}checked{% endif %}
+                           onchange="document.querySelectorAll('.regime-option-card').forEach(c => c.classList.remove('selected')); this.closest('.regime-option-card').classList.add('selected');">
+                    <div class="regime-card-content">
+                        <div class="alt-badge">OPTIONAL REGIME</div>
+                        <h3>Old Tax Regime (Traditional)</h3>
+                        <div class="regime-highlights">
+                            <span class="highlight-tag">📋 Slabs up to ₹2.5 Lakh @ 0%</span>
+                            <span class="highlight-tag">📋 Standard Deduction ₹50,000</span>
+                            <span class="highlight-tag">📋 Section 80C &amp; 80D Allowed</span>
+                        </div>
+                    </div>
+                </label>
+            </div>
+
+
+            <!-- ========================================================= -->
+            <!-- STEP 11: REVIEW TAX COMPUTATION & PREVIEW RETURN -->
+            <!-- ========================================================= -->
+            {% elif step == 11 %}
+            {% set s11 = sim_data.get('step_11', {}) %}
+            {% set s1 = sim_data.get('step_1', {}) %}
+            {% set s3 = sim_data.get('step_3', {}) %}
+
+            <div class="step-header-wrap">
+                <div>
+                    <h3 class="step-title-text">🔍 Step 11: Computation Review &amp; Pre-Filing Validation</h3>
+                    <p class="text-sm text-muted" style="margin-top: 4px;">
+                        Inspect your return for statutory compliance, missing details, or defects before declaration.
+                    </p>
+                </div>
+            </div>
+
+            <!-- VALIDATION REPORT CARD -->
+            {% if validation_report %}
+            <div class="statutory-result-card" style="margin-bottom: 25px;">
+                <div class="statutory-result-header">
+                    <div>
+                        <span class="statutory-eval-tag">Rule 12 &bull; Section 139(9) Defect Check</span>
+                        <h4 class="statutory-result-title">
+                            {% if validation_report.valid %}
+                                ✅ Validation Successful &mdash; No Defects Detected
+                            {% else %}
+                                ⚠️ Information Checked &mdash; Review Notes Below
+                            {% endif %}
+                        </h4>
+                    </div>
+                    <div>
+                        <span class="badge-pill {% if validation_report.valid %}badge-completed{% else %}badge-draft{% endif %}">
+                            Ready for Declaration
+                        </span>
+                    </div>
+                </div>
+
+                <div class="statutory-result-body" style="padding-top: 15px;">
+                    <ul style="list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:8px;">
+                        {% for chk in validation_report.checks %}
+                        <li style="display:flex; justify-content:space-between; font-size:13.5px; border-bottom:1px solid var(--border); padding-bottom:6px;">
+                            <span>{{ "✅" if chk.passed else "⚠️" }} <strong>{{ chk.name }}:</strong> {{ chk.detail }}</span>
+                            <span class="badge-pill {% if chk.passed %}badge-completed{% else %}badge-draft{% endif %}" style="font-size:11px;">
+                                {{ "PASS" if chk.passed else "CHECK" }}
+                            </span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+
+                    {% if validation_report.warnings %}
+                    <div style="margin-top: 15px; font-size: 12.5px; color: #b45309; background: #fef3c7; padding: 10px; border-radius: 6px;">
+                        <strong>Notes:</strong>
+                        <ul style="margin: 4px 0 0 16px; padding: 0;">
+                            {% for w in validation_report.warnings %}
+                            <li>{{ w }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- PREVIEW RETURN CARD -->
+            <div class="return-preview-box" style="border: 1px solid var(--border); border-radius: 10px; padding: 20px; background: #ffffff;">
+                <div style="display:flex; justify-content:space-between; align-items:center; border-bottom: 1px solid var(--border); padding-bottom: 12px; margin-bottom: 15px;">
+                    <h4 style="margin:0; color: var(--primary);">Draft Return Preview &mdash; {{ s3.get('selected_itr_form', 'ITR-1 (SAHAJ)') }}</h4>
+                    <span class="badge badge-primary">{{ sim.financial_year }}</span>
+                </div>
+
+                <div class="review-accordion">
+                    <div class="review-item">
+                        <h4>1. Taxpayer Identity &amp; Bank Account</h4>
+                        <p>
+                            <strong>Name:</strong> {{ s1.get('name') or session.get('user_name', 'Not entered') }} &bull;
+                            <strong>PAN:</strong> {{ s1.get('pan', 'Not entered') }} &bull;
+                            <strong>Age:</strong> {{ s1.get('age', '—') }} yrs &bull;
+                            <strong>Bank Refund Acc:</strong> {{ s1.get('bank_name', '—') }} ({{ s1.get('bank_account_no', '—') }}) &bull;
+                            <strong>IFSC:</strong> {{ s1.get('ifsc_code', '—') }}
+                        </p>
+                    </div>
+                    <div class="review-item">
+                        <h4>2. Summary of Incomes &amp; Deductions</h4>
+                        <p>
+                            <strong>Form:</strong> {{ s3.get('selected_itr_form', 'ITR-1 (SAHAJ)') }} &bull;
+                            <strong>Regime:</strong> {{ "New Regime (115BAC)" if sim_data.get('step_10', {}).get('regime') == 'new' else "Old Regime" }} &bull;
+                            <strong>Filing u/s:</strong> {{ s1.get('filing_section', '139(1)') }}
+                        </p>
+                    </div>
+                </div>
+
+                <div style="margin-top: 15px; display:flex; gap:10px;">
+                    <a href="{{ url_for('simulation_step', sim_id=sim.id, step=5) }}" class="btn btn-sm btn-outline">
+                        ✏️ Edit Salary
+                    </a>
+                    <a href="{{ url_for('simulation_step', sim_id=sim.id, step=7) }}" class="btn btn-sm btn-outline">
+                        ✏️ Edit Other Incomes
+                    </a>
+                    <a href="{{ url_for('simulation_step', sim_id=sim.id, step=8) }}" class="btn btn-sm btn-outline">
+                        ✏️ Edit Deductions
+                    </a>
+                </div>
+            </div>
+
+
+            <!-- ========================================================= -->
+            <!-- STEP 12: STATUTORY DECLARATION & E-VERIFICATION -->
+            <!-- ========================================================= -->
+            {% elif step == 12 %}
+            {% set s12 = sim_data.get('step_12', {}) %}
+            {% set s1 = sim_data.get('step_1', {}) %}
+
+            <div class="step-header-wrap">
+                <div>
+                    <h3 class="step-title-text">✍️ Step 12: Statutory Declaration &amp; E-Verification</h3>
+                    <p class="text-sm text-muted" style="margin-top: 4px;">
+                        Filing an ITR is legally complete only upon verification under Section 140 of the Income-tax Act.
+                    </p>
+                </div>
+            </div>
+
+            <h4 class="sub-header">1. Statutory Taxpayer Declaration (Rule 12)</h4>
+            <div class="declaration-box" style="background: #f8fafc; border: 1.5px solid #cbd5e1; border-radius: 8px; padding: 16px; margin-bottom: 20px;">
+                <label class="form-check-label" style="display:flex; gap:12px; align-items:flex-start;">
+                    <input type="checkbox" name="declaration_accepted" value="yes" required checked style="margin-top:4px;">
+                    <span style="font-size:14px; line-height:1.5;">
+                        I, <strong>{{ s1.get('name') or session.get('user_name', 'Taxpayer') }}</strong>, solemnly declare that to the best of my knowledge and belief, the information given in the return and the schedules thereto is correct and complete and is in accordance with the provisions of the Income-tax Act, 1961.
+                    </span>
+                </label>
+            </div>
+
+            <div class="form-grid-3" style="margin-bottom: 25px;">
+                <div class="form-group">
+                    <label for="signatory_capacity">Capacity of Signatory <span class="required">*</span></label>
+                    <select id="signatory_capacity" name="signatory_capacity" class="form-control" required>
+                        <option value="Self" selected>Self</option>
+                        <option value="Representative">Representative Assessee</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="verification_place">Place <span class="required">*</span></label>
+                    <input type="text" id="verification_place" name="verification_place" class="form-control" required
+                           value="{{ s12.get('verification_place', '') }}" placeholder="e.g., Bengaluru">
+                </div>
+                <div class="form-group">
+                    <label for="verification_date">Date <span class="required">*</span></label>
+                    <input type="date" id="verification_date" name="verification_date" class="form-control" required
+                           value="{{ s12.get('verification_date', sim.updated_at[:10]) }}">
+                </div>
+            </div>
+
+            <h4 class="sub-header">2. Select E-Verification Mechanism</h4>
+            <div class="form-grid-2">
+                <label class="regime-option-card selected" style="padding:14px;">
+                    <input type="radio" name="everify_method" value="Aadhaar OTP" checked>
+                    <div class="regime-card-content">
+                        <strong>📱 Aadhaar OTP (Simulated Instant Verification)</strong>
+                        <p class="text-xs text-muted" style="margin-top:4px;">OTP sent to registered Aadhaar mobile number.</p>
+                    </div>
+                </label>
+
+                <label class="regime-option-card" style="padding:14px;">
+                    <input type="radio" name="everify_method" value="Net Banking">
+                    <div class="regime-card-content">
+                        <strong>🏦 Electronic Verification Code via Net Banking</strong>
+                        <p class="text-xs text-muted" style="margin-top:4px;">Pre-validated login through bank account.</p>
+                    </div>
+                </label>
+
+                <label class="regime-option-card" style="padding:14px;">
+                    <input type="radio" name="everify_method" value="Bank EVC">
+                    <div class="regime-card-content">
+                        <strong>🔑 EVC through Pre-Validated Demat / Bank Account</strong>
+                        <p class="text-xs text-muted" style="margin-top:4px;">Generates simulated Electronic Verification Code.</p>
+                    </div>
+                </label>
+
+                <label class="regime-option-card" style="padding:14px;">
+                    <input type="radio" name="everify_method" value="ITR-V By Post">
+                    <div class="regime-card-content">
+                        <strong>📬 Send Signed ITR-V to CPC, Bengaluru</strong>
+                        <p class="text-xs text-muted" style="margin-top:4px;">Physical copy posted within 30 days of filing.</p>
+                    </div>
+                </label>
+            </div>
+
+
+            <!-- ========================================================= -->
+            <!-- STEP 13: CPC PROCESSING INTIMATION & POST-FILING OUTCOMES -->
+            <!-- ========================================================= -->
+            {% elif step == 13 %}
+            {% set s1 = sim_data.get('step_1', {}) %}
+            {% set calc = live_tax_calc.new if (live_tax_calc and sim_data.get('step_10', {}).get('regime') == 'new') else (live_tax_calc.old if live_tax_calc else None) %}
+            {% set refund_amt = calc.refund if calc else 0 %}
+            {% set payable_amt = calc.tax_payable if calc else 0 %}
+
+            <div class="final-step-card text-center" style="padding: 30px 20px;">
+                <div class="celebration-icon" style="font-size: 48px;">🏛️</div>
+                <h2 style="color: var(--primary); margin-top: 10px;">Return Processing &amp; Intimation Order u/s 143(1)</h2>
+                <p style="max-width: 620px; margin: 8px auto 25px auto; color: var(--muted); font-size: 14.5px;">
+                    Centralized Processing Centre (CPC, Bengaluru) simulated processing order for <strong>{{ s1.get('name') or session.get('user_name', 'Taxpayer') }}</strong> (PAN: {{ s1.get('pan', '—') }}).
+                </p>
+
+                <!-- DYNAMIC POST-FILING OUTCOME BRANCH -->
+                {% if refund_amt > 0 %}
+                <div class="outcome-card refund-card" style="background: #ecfdf5; border: 2px solid #10b981; border-radius: 12px; padding: 20px; max-width: 600px; margin: 0 auto 25px auto; text-align: left;">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <h3 style="color: #065f46; margin:0;">💰 Outcome A: Refund Order Approved</h3>
+                        <span class="badge-pill badge-completed">ECS Direct Transfer</span>
+                    </div>
+                    <p style="margin: 10px 0 6px 0; font-size: 14px; color: #047857;">
+                        Prepaid taxes exceeded your assessed tax liability. A refund has been determined u/s 143(1):
+                    </p>
+                    <div style="font-size: 26px; font-weight: 800; color: #065f46; margin: 10px 0;">
+                        ₹{{ "{:,.0f}".format(refund_amt) }} <span style="font-size: 14px; font-weight: normal; color: #047857;">+ Interest u/s 244A @ 0.5%/mo: ₹{{ "{:,.0f}".format(refund_amt * 0.015) }}</span>
+                    </div>
+                    <div class="text-xs text-muted" style="border-top: 1px dashed #6ee7b7; padding-top: 8px; margin-top: 10px;">
+                        Credited to: <strong>{{ s1.get('bank_name', 'Bank') }}</strong> (Acc: {{ s1.get('bank_account_no', 'XXXX') }}) &bull; IFSC: {{ s1.get('ifsc_code', '—') }}
+                    </div>
+                </div>
+
+                {% elif payable_amt > 0 %}
+                <div class="outcome-card payable-card" style="background: #fef2f2; border: 2px solid #ef4444; border-radius: 12px; padding: 20px; max-width: 600px; margin: 0 auto 25px auto; text-align: left;">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <h3 style="color: #991b1b; margin:0;">🧾 Outcome B: Tax Payable Demand Notice</h3>
+                        <span class="badge-pill badge-draft">Challan ITNS 280</span>
+                    </div>
+                    <p style="margin: 10px 0 6px 0; font-size: 14px; color: #b91c1c;">
+                        Tax liability exceeds advance taxes &amp; TDS. Outstanding balance payable:
+                    </p>
+                    <div style="font-size: 26px; font-weight: 800; color: #991b1b; margin: 10px 0;">
+                        ₹{{ "{:,.0f}".format(payable_amt) }}
+                    </div>
+                    <div class="text-xs text-muted" style="border-top: 1px dashed #fca5a5; padding-top: 8px; margin-top: 10px;">
+                        Payable via simulated Challan 280 before statutory deadline.
+                    </div>
+                </div>
+
+                {% else %}
+                <div class="outcome-card nil-card" style="background: #f8fafc; border: 2px solid #94a3b8; border-radius: 12px; padding: 20px; max-width: 600px; margin: 0 auto 25px auto; text-align: left;">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <h3 style="color: #334155; margin:0;">✅ Outcome C: Nil Demand / Nil Refund</h3>
+                        <span class="badge-pill badge-neutral">Completed</span>
+                    </div>
+                    <p style="margin: 10px 0 6px 0; font-size: 14px; color: #475569;">
+                        Assessed tax liability exactly matches tax credits paid. No further tax payment or refund is due.
+                    </p>
+                </div>
+                {% endif %}
+
+                <div class="final-flow-points" style="margin: 20px auto; max-width: 580px; text-align: left;">
+                    <div class="flow-point">
+                        <span class="flow-icon">✅</span>
+                        <span><strong>Statutory Verification Seal:</strong> Validated under Rule 12 &amp; Section 140.</span>
+                    </div>
+                    <div class="flow-point">
+                        <span class="flow-icon">✅</span>
+                        <span><strong>CPC Intimation Order:</strong> Issued under Section 143(1) of the Income-tax Act, 1961.</span>
+                    </div>
+                    <div class="flow-point">
+                        <span class="flow-icon">✅</span>
+                        <span><strong>Academic Record:</strong> Generates official acknowledgment summary (ITR-V) and downloadable PDF.</span>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+        </div>
+
+        <!-- STEP CARD FOOTER NAVIGATION BUTTONS -->
+        <div class="step-card-footer">
+            <div class="step-actions-left">
+                {% if step > 1 %}
+                <button type="submit" name="action" value="back" class="btn btn-secondary">
+                    ← Back (Step {{ step - 1 }})
+                </button>
+                {% endif %}
+            </div>
+
+            <div class="step-actions-right">
+                <button type="submit" name="action" value="save" class="btn btn-outline" title="Save draft without leaving">
+                    💾 Save Progress
+                </button>
+
+                {% if step == total_steps %}
+                <button type="submit" name="action" value="next" class="btn btn-success btn-lg">
+                    🏁 Finalize &amp; View Practice Report →
+                </button>
+                {% else %}
+                <button type="submit" name="action" value="next" class="btn btn-primary">
+                    Save &amp; Continue (Step {{ step + 1 }}) →
+                </button>
+                {% endif %}
+            </div>
+        </div>
+
+    </form>
+
+</div>
+
+<!-- JAVASCRIPT FOR HELPERS, TABS & INTERACTION -->
+<script>
+// Step 2 Helper Toggle & Calculation
+function toggleResHelper() {
+    const p = document.getElementById('resHelperPanel');
+    if (!p) return;
+    p.style.display = (p.style.display === 'none' || p.style.display === '') ? 'block' : 'none';
+}
+
+function updateResBadge(val) {
+    const hidden = document.getElementById('residential_status');
+    if (hidden) hidden.value = val;
+}
+
+function calcClientResidentialStatus() {
+    const dCurr = parseInt(document.getElementById('days_in_india').value) || 0;
+    const d4 = parseInt(document.getElementById('days_last_4_years').value) || 0;
+    const d7 = parseInt(document.getElementById('days_last_7_years').value) || 0;
+    const res2_10 = document.getElementById('resident_9_of_10').value === 'yes';
+
+    const basic1 = dCurr >= 182;
+    const basic2 = (dCurr >= 60 && d4 >= 365);
+    const isResident = basic1 || basic2;
+
+    let status = 'Non-Resident (NR)';
+    let badgeClass = 'badge-draft';
+    let reason = '';
+    let scope = '';
+
+    if (!isResident) {
+        status = 'Non-Resident (NR)';
+        badgeClass = 'badge-draft';
+        reason = 'Stay in FY 2025-26 was ' + dCurr + ' days (<182) and 4-year stay was ' + d4 + ' days. Neither basic condition u/s 6(1) is satisfied.';
+        scope = 'Under Section 5(2), only Indian-sourced income is taxable. Foreign income is non-taxable. Ineligible for ITR-1 Sahaj.';
+    } else {
+        const add1 = res2_10;
+        const add2 = d7 >= 730;
+        if (add1 && add2) {
+            status = 'Resident and Ordinarily Resident (ROR)';
+            badgeClass = 'badge-completed';
+            reason = 'Basic condition satisfied (' + dCurr + ' days in FY) and both Section 6(6) conditions met (Resident in 2 of 10 yrs + ' + d7 + ' days in 7 yrs).';
+            scope = 'Under Section 5(1), worldwide/global income is taxable in India. Eligible for ITR-1 Sahaj (subject to income limits).';
+        } else {
+            status = 'Resident but Not Ordinarily Resident (RNOR)';
+            badgeClass = 'badge-draft';
+            reason = 'Satisfies basic residency condition, but fails one of the Section 6(6) tests (Stay in 7 yrs: ' + d7 + ' days / Resident in 2 of 10 yrs: ' + (res2_10 ? 'Yes' : 'No') + ').';
+            scope = 'Taxable on Indian income and business controlled in India. Ineligible for ITR-1 Sahaj under Rule 12.';
+        }
+    }
+
+    const sel = document.getElementById('residential_status_choice');
+    if (sel) {
+        for (let i = 0; i < sel.options.length; i++) {
+            if (sel.options[i].value.includes(status) || status.includes(sel.options[i].value)) {
+                sel.selectedIndex = i;
+                break;
+            }
+        }
+        updateResBadge(sel.value);
+    }
+
+    const rBox = document.getElementById('clientResResultBox');
+    if (rBox) {
+        rBox.style.display = 'block';
+        document.getElementById('clientResTitle').innerText = status;
+        const b = document.getElementById('clientResBadge');
+        b.className = 'badge-pill ' + badgeClass;
+        b.innerText = isResident ? 'Resident' : 'Non-Resident';
+        document.getElementById('clientResReason').innerText = reason;
+        document.getElementById('clientResScope').innerHTML = '<strong>📌 Scope of Total Income:</strong> ' + scope;
+    }
+}
+
+// Step 3 Helper Toggle & Rule 12 Evaluation
+function toggleItrHelper() {
+    const p = document.getElementById('itrHelperPanel');
+    if (!p) return;
+    p.style.display = (p.style.display === 'none' || p.style.display === '') ? 'block' : 'none';
+    evalClientItrForm();
+}
+
+function selectFormCard(radio) {
+    document.querySelectorAll('.itr-form-radio-card').forEach(c => c.classList.remove('selected'));
+    radio.closest('.itr-form-radio-card').classList.add('selected');
+}
+
+let currentRecommendedFormCode = 'ITR-1';
+
+function evalClientItrForm() {
+    const hasSalary = document.getElementById('wiz_salary') ? document.getElementById('wiz_salary').value === 'yes' : true;
+    const multHp = document.getElementById('wiz_hp') ? document.getElementById('wiz_hp').value === 'yes' : false;
+    const hasCg = document.getElementById('wiz_cg') ? document.getElementById('wiz_cg').value === 'yes' : false;
+    const hasBiz = document.getElementById('wiz_business') ? document.getElementById('wiz_business').value === 'yes' : false;
+    const isPresumptive = document.getElementById('wiz_presumptive') ? document.getElementById('wiz_presumptive').value === 'yes' : false;
+    const hasForeign = document.getElementById('wiz_foreign') ? document.getElementById('wiz_foreign').value === 'yes' : false;
+    const incHigh = document.getElementById('wiz_income50l') ? document.getElementById('wiz_income50l').value === 'yes' : false;
+
+    let formCode = 'ITR-1';
+    let formTitle = 'ITR-1 (SAHAJ)';
+    let reason = 'Eligible for ITR-1 Sahaj: simple salary/interest income within ₹50 Lakhs limit with single house property.';
+
+    if (hasBiz) {
+        if (isPresumptive && !multHp && !hasCg && !hasForeign && !incHigh) {
+            formCode = 'ITR-4';
+            formTitle = 'ITR-4 (SUGAM)';
+            reason = 'Eligible for ITR-4 Sugam: opting for Presumptive Taxation u/s 44AD / 44ADA / 44AE with total income up to ₹50 Lakhs.';
+        } else {
+            formCode = 'ITR-3';
+            formTitle = 'ITR-3';
+            reason = 'Required to file ITR-3: income from Business or Profession with books of accounts or multiple house properties/capital gains.';
+        }
+    } else if (hasCg || multHp || hasForeign || incHigh) {
+        formCode = 'ITR-2';
+        formTitle = 'ITR-2';
+        reason = 'Required to file ITR-2: Disqualified from ITR-1 due to ' +
+                 (hasCg ? 'Capital Gains, ' : '') +
+                 (multHp ? 'Multiple House Properties, ' : '') +
+                 (hasForeign ? 'Foreign Assets/Income, ' : '') +
+                 (incHigh ? 'Total Income > ₹50 Lakhs, ' : '');
+        reason = reason.replace(/,\s*$/, '') + '.';
+    }
+
+    currentRecommendedFormCode = formCode;
+    const tEl = document.getElementById('clientItrTitle');
+    const rEl = document.getElementById('clientItrReason');
+    if (tEl) tEl.innerText = 'Recommended: ' + formTitle;
+    if (rEl) rEl.innerText = reason;
+}
+
+function applyRecommendedItr() {
+    const radios = document.querySelectorAll('input[name="selected_itr_form"]');
+    radios.forEach(r => {
+        if (r.value === currentRecommendedFormCode) {
+            r.checked = true;
+            selectFormCard(r);
+        }
+    });
+    toggleItrHelper();
+}
+
+// Step 4 Source Document Tabs
+function switchDocTab(tabId, btn) {
+    document.querySelectorAll('.doc-section-card').forEach(c => c.style.display = 'none');
+    document.querySelectorAll('.source-doc-tab-btn').forEach(b => b.classList.remove('active'));
+    const target = document.getElementById(tabId);
+    if (target) target.style.display = 'block';
+    if (btn) btn.classList.add('active');
+}
+</script>
+
+{% endblock %}
